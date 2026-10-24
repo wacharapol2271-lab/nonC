@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>สถานะสมาชิก | MEGA</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #0b1120;
+      color: #ffffff;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 24px 16px 50px;
+    }
+
+    .logo {
+      text-align: center;
+      font-size: 14px;
+      color: #94a3b8;
+      margin-bottom: 10px;
+    }
+
+    h1 {
+      text-align: center;
+      margin: 0 0 24px;
+      font-size: 26px;
+    }
+
+    .card {
+      background: #111c2e;
+      border: 1px solid #26364d;
+      border-radius: 18px;
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+
+    .card-title {
+      font-weight: bold;
+      font-size: 18px;
+      margin-bottom: 16px;
+    }
+
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 15px;
+      padding: 9px 0;
+      border-bottom: 1px solid #233146;
+    }
+
+    .info-row:last-child {
+      border-bottom: 0;
+    }
+
+    .label {
+      color: #94a3b8;
+    }
+
+    .value {
+      text-align: right;
+      font-weight: bold;
+    }
+
+    .active {
+      color: #22c55e;
+    }
+
+    .expired {
+      color: #ef4444;
+    }
+
+    .permission {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+
+      background: #0b1424;
+      border: 1px solid #26364d;
+      border-radius: 13px;
+
+      padding: 15px;
+      margin-top: 10px;
+    }
+
+    .permission-name {
+      font-weight: bold;
+    }
+
+    .allow {
+      color: #22c55e;
+      font-weight: bold;
+      text-align: right;
+    }
+
+    .deny {
+      color: #f87171;
+      font-weight: bold;
+      text-align: right;
+    }
+
+    .loading {
+      text-align: center;
+      color: #94a3b8;
+      padding: 30px;
+    }
+
+    .error {
+      padding: 15px;
+      background: #451a1a;
+      color: #fecaca;
+      border-radius: 12px;
+      text-align: center;
+    }
+
+    .footer {
+      text-align: center;
+      margin-top: 25px;
+      font-size: 12px;
+      color: #64748b;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="container">
+
+  <div class="logo">MEGA MEMBER SYSTEM</div>
+
+  <h1>👑 สถานะสมาชิก</h1>
+
+  <div id="loading" class="loading">
+    กำลังตรวจสอบข้อมูลสมาชิก...
+  </div>
+
+  <div id="content" style="display:none;">
+
+    <div class="card">
+
+      <div class="card-title">
+        👤 ข้อมูลสมาชิก
+      </div>
+
+      <div class="info-row">
+        <div class="label">ชื่อ</div>
+        <div id="fullname" class="value">-</div>
+      </div>
+
+      <div class="info-row">
+        <div class="label">เบอร์สมาชิก</div>
+        <div id="phone" class="value">-</div>
+      </div>
+
+      <div class="info-row">
+        <div class="label">สถานะ</div>
+        <div id="status" class="value">-</div>
+      </div>
+
+      <div class="info-row">
+        <div class="label">วันคงเหลือ</div>
+        <div id="remainDays" class="value">-</div>
+      </div>
+
+      <div class="info-row">
+        <div class="label">วันที่อนุมัติ</div>
+        <div id="approvedAt" class="value">-</div>
+      </div>
+
+      <div class="info-row">
+        <div class="label">วันหมดอายุ</div>
+        <div id="expireAt" class="value">-</div>
+      </div>
+
+    </div>
+
+
+    <div class="card">
+
+      <div class="card-title">
+        🔐 สิทธิ์การใช้งานคำสั่ง
+      </div>
+
+      <div id="permissionList"></div>
+
+    </div>
+
+  </div>
+
+
+  <div id="errorBox" style="display:none;"></div>
+
+
+  <div class="footer">
+    ใช้สำหรับตรวจสอบสถานะสมาชิกและสิทธิ์การใช้งาน
+  </div>
+
+</div>
+
+
+<script>
+
+function thaiDate(value) {
+
+  if (!value) return '-';
+
+  const d = new Date(value);
+
+  if (isNaN(d.getTime())) {
+    return '-';
+  }
+
+  return d.toLocaleDateString('th-TH', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric'
+  });
+}
+
+
+function permissionRow(icon, name, allowed) {
+
+  return `
+    <div class="permission">
+
+      <div class="permission-name">
+        ${icon} ${name}
+      </div>
+
+      <div class="${allowed ? 'allow' : 'deny'}">
+        ${
+          allowed
+            ? 'มีสิทธิ์ใช้งาน ✅'
+            : 'ไม่มีสิทธิ์ใช้งาน 🔒'
+        }
+      </div>
+
+    </div>
+  `;
+}
+
+
+async function loadMemberStatus() {
+
+  const loading =
+    document.getElementById('loading');
+
+  const content =
+    document.getElementById('content');
+
+  const errorBox =
+    document.getElementById('errorBox');
+
+
+  try {
+
+    const response =
+      await fetch('/api/member/status', {
+        credentials: 'include'
+      });
+
+    const data =
+      await response.json();
+
+
+    if (!response.ok || !data.success) {
+
+      throw new Error(
+        data.message ||
+        'ไม่สามารถตรวจสอบสถานะสมาชิกได้'
+      );
+
+    }
+
+
+    const member = data.member;
+    const permissions = data.permissions;
+
+
+    document.getElementById('fullname').textContent =
+      member.fullname || '-';
+
+    document.getElementById('phone').textContent =
+      member.phone || '-';
+
+
+    const statusEl =
+      document.getElementById('status');
+
+    if (member.status === 'active') {
+
+      statusEl.textContent =
+        'ใช้งานอยู่ ✅';
+
+      statusEl.className =
+        'value active';
+
+    } else {
+
+      statusEl.textContent =
+        'หมดอายุ ⛔';
+
+      statusEl.className =
+        'value expired';
+    }
+
+
+    document.getElementById('remainDays').textContent =
+      `${member.remainDays || 0} วัน`;
+
+    document.getElementById('approvedAt').textContent =
+      thaiDate(member.approvedAt);
+
+    document.getElementById('expireAt').textContent =
+      thaiDate(member.expireAt);
+
+
+    document.getElementById('permissionList')
+      .innerHTML =
+
+        permissionRow(
+          '📗',
+          'จด AIS',
+          permissions.ais
+        )
+
+        +
+
+        permissionRow(
+          '📘',
+          'จด DTAC',
+          permissions.dtac
+        )
+
+        +
+
+        permissionRow(
+          '📙',
+          'จด TRUE',
+          permissions.true
+        )
+
+        +
+
+        permissionRow(
+          '📦',
+          'พัสดุหลัก',
+          permissions.parcel
+        )
+
+        +
+
+        permissionRow(
+          '🏥',
+          'ข้อมูลการรักษา',
+          permissions.health
+        );
+
+
+    loading.style.display = 'none';
+    content.style.display = 'block';
+
+  }
+
+  catch (error) {
+
+    loading.style.display = 'none';
+
+    errorBox.style.display = 'block';
+
+    errorBox.innerHTML =
+      `<div class="error">${error.message}</div>`;
+
+  }
+
+}
+
+
+loadMemberStatus();
+
+</script>
+
+</body>
+</html>
