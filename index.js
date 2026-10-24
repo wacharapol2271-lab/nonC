@@ -5553,7 +5553,7 @@ app.get(
   content="width=device-width, initial-scale=1.0, maximum-scale=1.0"
 >
 
-<title>NECT BANK REQUEST</title>
+<title>NoNC BANK REQUEST</title>
 
 
 <style>
@@ -6221,7 +6221,7 @@ textarea {
     </div>
 
     <div class="brand-title">
-      NECT BANK REQUEST
+      NoNC BANK REQUEST
     </div>
 
     <div class="brand-subtitle">
@@ -7142,7 +7142,7 @@ app.get(
   >
 
   <title>
-    NECT BASE REQUEST
+    NoNC BASE REQUEST
   </title>
 
 
@@ -7702,7 +7702,7 @@ app.get(
     </div>
 
     <div class="brand-title">
-      NECT BASE REQUEST
+      NoNC BASE REQUEST
     </div>
 
     <div class="brand-subtitle">
@@ -8583,7 +8583,7 @@ app.get(
   content="width=device-width, initial-scale=1.0, maximum-scale=1.0"
 >
 
-<title>NECT - Plate OCR</title>
+<title>NoNC - Plate OCR</title>
 
 <style>
 
@@ -9010,7 +9010,7 @@ body {
     </div>
 
     <div class="brand-title">
-      NECT
+      NoNC
     </div>
 
     <div class="brand-subtitle">
@@ -17738,7 +17738,7 @@ function styleNectMessage(message) {
     return Object.fromEntries(Object.entries(value).map(([key, item]) => [key, clone(item)]));
   };
   const result = clone(message);
-  if (result?.type === 'text' && /^(?:📋 NECT · เมนูคำสั่ง|🚘 NECT · รหัสประเภทรถ|🧭 NECT · เลือกงานค้นหา|🚘 NECT · คู่มือประเภทรถ)\n/.test(result.text || '')) return result;
+  if (result?.type === 'text' && /^(?:📋 NoNC · เมนูคำสั่ง|🚘 NoNC · รหัสประเภทรถ|🧭 NoNC · เลือกงานค้นหา|🚘 NoNC · คู่มือประเภทรถ)\n/.test(result.text || '')) return result;
   const iconCount = text => (String(text).match(/\p{Extended_Pictographic}/gu) || []).length;
   const labelIcon = text => {
     const label = text.replace(/^[ \t•]+/, '');
@@ -17756,8 +17756,8 @@ function styleNectMessage(message) {
   // Add a compact heading without touching data, mentions, or custom emoji offsets.
   if (result?.type === 'text' && typeof result.text === 'string') {
     if (!result.text.trim() || result.emojis?.length || result.mention) return result;
-    const heading = '📄 NECT · รายงานการค้นหา\n━━━━━━━━━━━━━━━━\n';
-    const previousHeadings = [heading, '📋 NECT · ผลลัพธ์\n────────────\n', 'NECT · ผลลัพธ์\n────────────\n'];
+    const heading = '📄 NoNC · รายงานการค้นหา\n━━━━━━━━━━━━━━━━\n';
+    const previousHeadings = [heading, '📋 NoNC · ผลลัพธ์\n────────────\n', 'NoNC · ผลลัพธ์\n────────────\n'];
     const currentHeading = previousHeadings.find(value => result.text.startsWith(value));
     let body = currentHeading ? result.text.slice(currentHeading.length) : result.text;
     let remaining = Math.max(0, 2 - iconCount(body));
@@ -17778,7 +17778,7 @@ function styleNectMessage(message) {
     inset: '#F1F5FB', ink: '#172B4D', muted: '#52677D',
     accent: '#2563EB', accentLight: '#93C5FD'
   };
-  const reportBadge = 'NECT / DATA REPORT';
+  const reportBadge = 'NoNC / DATA REPORT';
   const rgb = value => {
     if (typeof value !== 'string' || !/^#[0-9a-f]{6}([0-9a-f]{2})?$/i.test(value)) return null;
     return [1, 3, 5].map(index => parseInt(value.slice(index, index + 2), 16));
@@ -21543,7 +21543,7 @@ async function queryAuthorizedSiData({
             'th-TH,th;q=0.9,en;q=0.8',
 
           'User-Agent':
-            'NECT/1.0'
+            'NoNC/1.0'
         }
       }
     );
@@ -22741,7 +22741,7 @@ async function searchIMEI(imei) {
     });
     const data = response.data;
     if (!data || !data.result || !data.result.imei) {
-      return `NECT
+      return `NoNC
  ข้อมูลอุปกรณ์ (Device Info)
 
 ไม่พบข้อมูลรายการ หรือ ตัวเลขไม่ถูกต้อง
@@ -24016,7 +24016,7 @@ function buildMenuFooter() {
 
 // Shared public menu text; command handling remains separate.
 function buildMenuText() {
-  return `🧭 NECT · เลือกงานค้นหา
+  return `🧭 NoNC · เลือกงานค้นหา
 ────────────────
 เลือกกลุ่มงาน แล้วเติมข้อมูลต่อท้ายคำสั่ง
 วิธีส่ง: ชื่อคำสั่ง@ข้อมูลที่ต้องการ
@@ -24242,7 +24242,7 @@ chphis@ID
 }
 
 function buildVehicleTypeMenuText() {
-  return `🚘 NECT · คู่มือประเภทรถ
+  return `🚘 NoNC · คู่มือประเภทรถ
 ────────────────
 เลือกรหัสให้ตรงกับประเภทรถ แล้วใส่ท้าย car@
 
@@ -24283,7 +24283,7 @@ function buildWelfareMenuFlex() {
   return {
     type: 'flex',
 
-    altText: "NECT · สรุปสิทธิสวัสดิการแห่งรัฐ",
+    altText: "NoNC · สรุปสิทธิสวัสดิการแห่งรัฐ",
 
     contents: {
       type: 'bubble',
@@ -24307,7 +24307,7 @@ function buildWelfareMenuFlex() {
 
           {
             type: 'text',
-            text: "NECT / WELFARE",
+            text: "NoNC / WELFARE",
             color: '#94A3B8',
             size: 'xs',
             margin: 'sm'
@@ -24384,7 +24384,7 @@ function buildMoneyFlowMenuFlex() {
   return {
     type: 'flex',
 
-    altText: "NECT · สำรวจรายการเงินด้วย Money Flow Link",
+    altText: "NoNC · สำรวจรายการเงินด้วย Money Flow Link",
 
     contents: {
       type: 'bubble',
@@ -24408,7 +24408,7 @@ function buildMoneyFlowMenuFlex() {
 
           {
             type: 'text',
-            text: "NECT / MONEY FLOW LINK",
+            text: "NoNC / MONEY FLOW LINK",
             color: '#94A3B8',
             size: 'xs',
             margin: 'sm'
@@ -25259,7 +25259,7 @@ function buildContactAdminFlex() {
       action: {
         type: 'uri',
         label: " ติดต่อ ADMIN",
-        uri: 'https://line.me/ti/p/mVmD-ncfvU'
+        uri: 'https://lin.ee/xO0SDno'
             }
           }
         ]
@@ -25740,7 +25740,7 @@ function buildWelcomeWarningFlex() {
             action: {
               type: 'uri',
               label: 'ติดต่อ ADMIN',
-              uri: 'https://line.me/ti/p/mVmD-ncfvU'
+              uri: 'https://lin.ee/xO0SDno'
             }
           }
 
@@ -28123,7 +28123,7 @@ if (
 `User ของท่านถูกระงับ
 เนื่องจากสิทธิ์หมดอายุ
 ต้องการต่ออายุใช้งานติดต่อแอดมิน :
-https://line.me/ti/p/mVmD-ncfvU`
+https://lin.ee/xO0SDno`
   });
 }
 
@@ -28987,7 +28987,7 @@ if (
             {
               type: 'text',
               text:
-                'NECT SIGNAL REQUEST SYSTEM',
+                'NoNC SIGNAL REQUEST SYSTEM',
 
               color:
                 '#94A3B8',
@@ -29233,7 +29233,7 @@ if (text.toLowerCase() === 'bank%') {
               type: 'text',
 
               text:
-                'NECT BANK REQUEST SYSTEM',
+                'NoNC BANK REQUEST SYSTEM',
 
               color:
                 '#94A3B8',
@@ -30011,7 +30011,7 @@ if (text === 'pt%') {
 
             {
               type: 'text',
-              text: 'NECT AI TOOLS',
+              text: 'NoNC AI TOOLS',
               color: '#94A3B8',
               size: 'xs',
               margin: 'sm'
@@ -30618,7 +30618,7 @@ if (text.startsWith('ระงับสมาชิก#')) {
 `User ของท่านถูกระงับ
 เนื่องจากสิทธิ์หมดอายุ
 ต้องการต่ออายุใช้งานติดต่อแอดมิน :
-https://line.me/ti/p/mVmD-ncfvU`
+https://lin.ee/xO0SDno`
     });
 
   } catch (e) {
@@ -33244,7 +33244,7 @@ text:`สิทธิ์สืบค้นคำสั่ง DTAC ถูกย�
 
 ต้องการใช้งานติดต่อ admin
 Contact Admin:
-https://line.me/ti/p/mVmD-ncfvU
+https://lin.ee/xO0SDno
 ────────────`
 });
 }
