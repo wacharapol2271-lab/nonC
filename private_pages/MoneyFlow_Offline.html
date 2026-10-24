@@ -1,0 +1,587 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Money Flow Link Analysis — Offline v2</title>
+<style>
+:root{
+  --bg:#071019;--panel:#0c1722;--panel2:#101e2b;--line:#223446;--text:#e7eef5;--muted:#8fa4b8;
+  --cyan:#27d4ff;--green:#35d07f;--red:#ff6577;--amber:#f4b942;--blue:#5aa9ff;--purple:#aa8cff;
+  --shadow:0 18px 45px rgba(0,0,0,.24);--radius:18px;
+}
+*{box-sizing:border-box}html,body{margin:0;background:radial-gradient(circle at 18% -10%,#11334a 0,transparent 28%),var(--bg);color:var(--text);font-family:Inter,"Noto Sans Thai","Segoe UI",Tahoma,sans-serif;font-size:14px}
+button,input,select{font:inherit}.app{min-height:100vh}.topbar{position:sticky;top:0;z-index:20;height:68px;display:flex;align-items:center;gap:16px;padding:0 24px;background:rgba(7,16,25,.88);backdrop-filter:blur(16px);border-bottom:1px solid rgba(255,255,255,.07)}
+.brand{display:flex;align-items:center;gap:12px;font-weight:800;letter-spacing:.2px}.logo{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;background:linear-gradient(145deg,#073c51,#0f5d79);box-shadow:inset 0 0 0 1px rgba(255,255,255,.08)}
+.brand small{display:block;color:var(--muted);font-size:11px;font-weight:600;margin-top:2px}.spacer{flex:1}.local-badge{display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:999px;background:#0b2a20;color:#9debc2;border:1px solid #174f3b;font-size:12px}.dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 14px var(--green)}
+.shell{max-width:1540px;margin:auto;padding:22px}.upload-grid{display:grid;grid-template-columns:1.2fr .8fr;gap:18px}.card{background:linear-gradient(180deg,rgba(16,30,43,.96),rgba(10,22,33,.96));border:1px solid rgba(255,255,255,.07);border-radius:var(--radius);box-shadow:var(--shadow)}
+.card-pad{padding:20px}.dropzone{min-height:180px;border:1.5px dashed #31536c;border-radius:16px;display:flex;align-items:center;justify-content:center;flex-direction:column;text-align:center;cursor:pointer;transition:.2s;background:linear-gradient(180deg,rgba(39,212,255,.035),transparent)}
+.dropzone:hover,.dropzone.drag{border-color:var(--cyan);background:rgba(39,212,255,.06);transform:translateY(-1px)}.drop-icon{width:54px;height:54px;border-radius:16px;background:#0c3548;display:grid;place-items:center;font-size:27px;margin-bottom:12px}.dropzone b{font-size:16px}.dropzone p{margin:7px 0 0;color:var(--muted);font-size:12px}.dropzone input{display:none}
+.file-meta{margin-top:13px;display:none;grid-template-columns:1fr auto;gap:8px 14px;align-items:center;padding:12px 14px;border-radius:12px;background:#09131d;border:1px solid var(--line)}.file-meta.show{display:grid}.file-name{font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.file-detail{color:var(--muted);font-size:12px}.pill{font-size:11px;border:1px solid var(--line);padding:5px 8px;border-radius:999px;color:#a9bfd2}
+.section-title{display:flex;align-items:center;gap:9px;font-size:15px;font-weight:800;margin-bottom:15px}.field{display:flex;flex-direction:column;gap:6px;margin-bottom:12px}.field label{color:#a9bfd2;font-size:12px}.field input,.field select{width:100%;border:1px solid var(--line);background:#08131d;color:var(--text);border-radius:10px;padding:10px 11px;outline:none}.field input:focus,.field select:focus{border-color:#2d8fb4;box-shadow:0 0 0 3px rgba(39,212,255,.07)}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}.btn{border:0;border-radius:11px;padding:10px 14px;cursor:pointer;font-weight:800;display:inline-flex;align-items:center;justify-content:center;gap:7px}.btn-primary{background:linear-gradient(135deg,#20bfe9,#1688c7);color:#031018}.btn-primary:hover{filter:brightness(1.08)}.btn-ghost{background:#0a1722;color:#bad0e2;border:1px solid var(--line)}.btn:disabled{opacity:.45;cursor:not-allowed}.actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:14px}
+.notice{margin-top:12px;color:var(--muted);font-size:11px;line-height:1.55}.status{margin:18px 0 0;padding:11px 14px;border-radius:12px;display:none}.status.show{display:block}.status.info{background:#0c2635;border:1px solid #184d66;color:#b7eaff}.status.ok{background:#0b2b20;border:1px solid #1e5a43;color:#b7f1d0}.status.err{background:#34131a;border:1px solid #6c2837;color:#ffd0d7}
+.mapping{margin-top:18px;display:none}.mapping.show{display:block}.mapping details{border:1px solid var(--line);border-radius:14px;overflow:hidden;background:#0a1520}.mapping summary{cursor:pointer;padding:13px 15px;font-weight:800;list-style:none}.mapping summary::-webkit-details-marker{display:none}.map-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;padding:0 15px 15px}.map-grid .field{margin:0}.map-grid select{padding:8px;font-size:12px}
+.dashboard{display:none;margin-top:18px}.dashboard.show{display:block}.kpis{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px;margin-bottom:16px}.kpi{padding:16px;border-radius:15px;background:linear-gradient(180deg,#101f2c,#0b1721);border:1px solid rgba(255,255,255,.07)}.kpi .label{color:var(--muted);font-size:11px}.kpi .value{font-size:22px;font-weight:900;margin-top:5px;white-space:nowrap}.kpi .sub{font-size:11px;color:#88a0b4;margin-top:4px}.green{color:var(--green)}.red{color:var(--red)}.cyan{color:var(--cyan)}.amber{color:var(--amber)}
+.tabs{display:flex;gap:6px;overflow:auto;padding:6px;background:#09131d;border:1px solid var(--line);border-radius:13px;margin-bottom:14px}.tab{white-space:nowrap;border:0;background:transparent;color:#91a7ba;padding:9px 13px;border-radius:9px;cursor:pointer;font-weight:700}.tab.active{background:#13283a;color:#dff6ff;box-shadow:inset 0 0 0 1px #244862}.tab-pane{display:none}.tab-pane.active{display:block}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px}.inner-card{padding:17px;border-radius:15px;background:#0b1721;border:1px solid rgba(255,255,255,.065)}.inner-card h3{font-size:14px;margin:0 0 13px}.bar-row{display:grid;grid-template-columns:minmax(120px,1fr) 2fr auto;gap:9px;align-items:center;margin:9px 0}.bar-label{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#c1d2df;font-size:12px}.bar-track{height:9px;background:#132433;border-radius:99px;overflow:hidden}.bar-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,#1688c7,#27d4ff)}.bar-val{font-size:11px;color:#9db2c4;font-variant-numeric:tabular-nums}
+.toolbar{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-bottom:10px}.toolbar .search{min-width:220px;flex:1;max-width:420px}.toolbar input,.toolbar select{border:1px solid var(--line);background:#08131d;color:var(--text);border-radius:9px;padding:8px 10px;outline:none}.toolbar label{font-size:11px;color:var(--muted)}
+.table-wrap{overflow:auto;max-height:610px;border:1px solid var(--line);border-radius:12px;background:#07121b}.data-table{width:100%;border-collapse:separate;border-spacing:0;font-size:12px;min-width:900px}.data-table th{position:sticky;top:0;z-index:2;background:#112232;color:#bcd0df;text-align:left;padding:10px;border-bottom:1px solid #294052;white-space:nowrap}.data-table td{padding:9px 10px;border-bottom:1px solid #142534;vertical-align:top;white-space:nowrap}.data-table tr:hover td{background:#0d1c28}.money{text-align:right;font-variant-numeric:tabular-nums}.tag{display:inline-flex;padding:3px 7px;border-radius:999px;font-size:10px;font-weight:800}.tag.in{background:#0c3425;color:#8ee2b5}.tag.out{background:#3b1720;color:#ffadba}.tag.unknown{background:#2d2b1b;color:#f3d789}
+.network-wrap{position:relative;height:650px;border:1px solid var(--line);border-radius:14px;overflow:hidden;background:radial-gradient(circle at 50% 50%,#102638 0,#07121b 60%)}#networkSvg{width:100%;height:100%;display:block;touch-action:none;user-select:none}.network-help{font-size:10px;color:var(--muted);margin-left:auto}.network-help b{color:#cfe9f5}.edge-hit{cursor:grab}.edge-hit:active{cursor:grabbing}.network-legend{position:absolute;left:13px;bottom:13px;display:flex;gap:10px;padding:7px 10px;border-radius:10px;background:rgba(5,12,18,.82);border:1px solid var(--line);font-size:10px}.legend-item{display:flex;align-items:center;gap:5px}.legend-line{width:18px;height:3px;border-radius:99px}.node-detail{position:absolute;right:12px;top:12px;width:310px;max-height:610px;overflow:auto;background:rgba(7,18,27,.95);border:1px solid #294456;border-radius:14px;padding:14px;box-shadow:var(--shadow);display:none}.node-detail.show{display:block}.node-detail h4{margin:0 0 5px}.node-detail .muted{font-size:11px;color:var(--muted)}.node-detail .mini{margin-top:12px;padding-top:10px;border-top:1px solid var(--line);font-size:11px;line-height:1.7}.close-x{float:right;border:0;background:transparent;color:#9bb1c3;cursor:pointer;font-size:18px}
+.empty{padding:36px;text-align:center;color:var(--muted)}.footer{margin:20px 0 4px;text-align:center;color:#5f778b;font-size:11px}.warnbox{padding:12px 14px;border-radius:12px;background:#302814;border:1px solid #665321;color:#f4dfa0;font-size:11px;line-height:1.6;margin-bottom:12px}
+@media(max-width:1100px){.upload-grid,.grid-2{grid-template-columns:1fr}.kpis{grid-template-columns:repeat(3,1fr)}.map-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:680px){.shell{padding:12px}.topbar{padding:0 12px}.brand small{display:none}.local-badge span:last-child{display:none}.kpis{grid-template-columns:repeat(2,1fr)}.map-grid{grid-template-columns:1fr}.network-wrap{height:560px}.node-detail{width:calc(100% - 24px);max-height:330px;top:auto;bottom:12px}}
+
+/* ===== Link Network v2 enhancements ===== */
+.network-controls{padding:12px 12px 4px;margin-bottom:10px;border:1px solid var(--line);border-radius:14px;background:linear-gradient(180deg,#0d1b27,#09141e)}
+.network-controls .toolbar{margin-bottom:8px}.network-controls .toolbar:last-child{margin-bottom:4px}.network-controls input[type="number"]{width:120px}.network-controls input[type="date"],.network-controls input[type="datetime-local"]{width:190px}.network-controls .compact{width:auto;min-width:92px}.network-controls .search{min-width:220px}.network-chips{display:flex;gap:7px;flex-wrap:wrap;margin:2px 0 9px}.network-chip{padding:5px 8px;border-radius:999px;background:#0b1b27;border:1px solid #223c50;color:#a9bfd2;font-size:10px}.network-chip b{color:#e4f3fa}.network-chip.active{border-color:#2d8fb4;color:#d9f5ff;background:#0e2b3a}
+.timeline-box{display:flex;align-items:center;gap:8px;flex:1;min-width:340px}.timeline-sliders{position:relative;flex:1;height:26px;min-width:180px}.timeline-sliders input[type="range"]{position:absolute;left:0;right:0;top:2px;width:100%;padding:0;background:transparent;border:0;pointer-events:none;accent-color:var(--cyan)}.timeline-sliders input[type="range"]::-webkit-slider-thumb{pointer-events:auto}.timeline-sliders input[type="range"]::-moz-range-thumb{pointer-events:auto}.timeline-label{font-size:10px;color:#a9bfd2;white-space:nowrap}
+.network-wrap{height:700px}.network-context{position:fixed;z-index:1000;min-width:190px;padding:6px;background:#08131d;border:1px solid #2d4659;border-radius:11px;box-shadow:0 18px 45px rgba(0,0,0,.42);display:none}.network-context.show{display:block}.network-context button{display:block;width:100%;text-align:left;border:0;background:transparent;color:#c9dbe7;border-radius:8px;padding:8px 9px;cursor:pointer;font-size:11px}.network-context button:hover{background:#13283a;color:#fff}.network-context hr{border:0;border-top:1px solid var(--line);margin:5px}
+.node-detail{width:370px;max-height:660px}.detail-actions{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0}.detail-actions button{padding:7px 9px;font-size:10px}.detail-table{width:100%;border-collapse:collapse;font-size:10px;margin-top:8px}.detail-table th,.detail-table td{padding:6px;border-bottom:1px solid #183043;text-align:left;vertical-align:top}.detail-table th{color:#9fb5c5;position:sticky;top:0;background:#08131d}.detail-table .money{text-align:right}.note-box{margin-top:10px;border-top:1px solid var(--line);padding-top:10px}.note-box input,.note-box textarea{width:100%;border:1px solid var(--line);background:#08131d;color:var(--text);border-radius:9px;padding:8px;margin-top:5px;outline:none}.note-box textarea{min-height:68px;resize:vertical}.selected-ring{filter:drop-shadow(0 0 7px rgba(39,212,255,.7))}.edge-label{font-size:9px;font-weight:800;fill:#dbeaf3;paint-order:stroke;stroke:#07121b;stroke-width:4px;stroke-linejoin:round;pointer-events:none}.node-badge{font-size:8px;font-weight:800;fill:#f7d989;paint-order:stroke;stroke:#07121b;stroke-width:3px;pointer-events:none}.network-empty{font-size:14px;fill:#8fa4b8;text-anchor:middle}.network-stats{display:flex;gap:7px;flex-wrap:wrap;margin:-2px 0 10px}.network-stats .network-chip{cursor:default}.mini-switch{display:inline-flex;align-items:center;gap:5px;font-size:10px!important;color:#a9bfd2}.mini-switch input{accent-color:var(--cyan)}
+@media print{body.network-printing .topbar,body.network-printing .upload-grid,body.network-printing .mapping,body.network-printing .kpis,body.network-printing .tabs,body.network-printing .tab-pane:not(#pane-network),body.network-printing .network-controls,body.network-printing .footer{display:none!important}body.network-printing #dashboard,body.network-printing #pane-network{display:block!important}body.network-printing .network-wrap{height:180mm;border:1px solid #bbb;background:#fff}body.network-printing #networkSvg{background:#07121b}}
+@media(max-width:760px){.network-controls input[type="date"],.network-controls input[type="datetime-local"]{width:175px}.timeline-box{min-width:100%}.network-wrap{height:620px}.node-detail{width:calc(100% - 24px);max-height:360px}}
+
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <div class="brand"><div class="logo">⇄</div><div>Money Flow Link Analysis<small>MEGA STATEMENT ANALYZER</small></div></div>
+    <div class="spacer"></div>
+    <div class="local-badge"><span class="dot"></span><span>ประมวลผลบนเครื่องเท่านั้น</span></div>
+  </header>
+
+  <main class="shell">
+    <section class="upload-grid">
+      <div class="card card-pad">
+        <div class="section-title">📂 อัปโหลดไฟล์ Statement</div>
+        <label class="dropzone" id="dropzone">
+          <input id="fileInput" type="file" accept=".xlsx,.csv" />
+          <div class="drop-icon">⬆</div>
+          <b>ลากไฟล์มาวาง หรือคลิกเพื่อเลือกไฟล์</b>
+          <p>รองรับ .XLSX และ .CSV • ไฟล์จะไม่ถูกส่งออกจากเครื่อง</p>
+        </label>
+        <div class="file-meta" id="fileMeta">
+          <div><div class="file-name" id="fileName">-</div><div class="file-detail" id="fileDetail">-</div></div>
+          <div class="pill" id="fileType">XLSX</div>
+        </div>
+        <div id="status" class="status"></div>
+      </div>
+
+      <div class="card card-pad">
+        <div class="section-title">⚙️ ตั้งค่าการวิเคราะห์</div>
+        <div class="field"><label>ชีตข้อมูล</label><select id="sheetSelect" disabled><option>กรุณาอัปโหลดไฟล์ก่อน</option></select></div>
+        <div class="field"><label>บัญชีหลักที่กำลังวิเคราะห์</label><input id="mainAccount" placeholder="เช่น 6792269174" /></div>
+        <div class="row2">
+          <div class="field"><label>ช่วงเวลา Rapid Flow (นาที)</label><input id="rapidMinutes" type="number" min="1" max="1440" value="60" /></div>
+          <div class="field"><label>จำนวน Node ใน Network</label><select id="nodeLimit"><option>15</option><option selected>25</option><option>40</option><option>60</option><option>100</option></select></div>
+        </div>
+        <div class="field"><label>ความคลาดเคลื่อนยอด Rapid Flow</label><select id="rapidTolerance"><option value="0" selected>ยอดเท่ากัน 100%</option><option value="1">± 1%</option><option value="3">± 3%</option><option value="5">± 5%</option></select></div>
+        <button class="btn btn-primary" id="analyzeBtn" disabled>🔎 วิเคราะห์เส้นเงิน</button>
+        <div class="notice">ระบบจะตรวจคอลัมน์ให้อัตโนมัติ หากชื่อคอลัมน์ของธนาคารแตกต่าง สามารถแก้ไขได้ที่ “Column Mapping” ด้านล่าง</div>
+      </div>
+    </section>
+
+    <section class="mapping" id="mappingWrap">
+      <details class="card" open>
+        <summary>🧩 Column Mapping <span style="color:var(--muted);font-weight:500">— ตรวจสอบชื่อคอลัมน์ก่อนวิเคราะห์</span></summary>
+        <div class="map-grid" id="mapGrid"></div>
+      </details>
+    </section>
+
+    <section class="dashboard" id="dashboard">
+      <div class="kpis">
+        <div class="kpi"><div class="label">รายการทั้งหมด</div><div class="value cyan" id="kpiRows">0</div><div class="sub">transactions</div></div>
+        <div class="kpi"><div class="label">เงินเข้า</div><div class="value green" id="kpiIn">฿0</div><div class="sub" id="kpiInCount">0 ครั้ง</div></div>
+        <div class="kpi"><div class="label">เงินออก</div><div class="value red" id="kpiOut">฿0</div><div class="sub" id="kpiOutCount">0 ครั้ง</div></div>
+        <div class="kpi"><div class="label">กระแสเงินสุทธิ</div><div class="value" id="kpiNet">฿0</div><div class="sub">IN − OUT</div></div>
+        <div class="kpi"><div class="label">คู่บัญชี</div><div class="value amber" id="kpiCp">0</div><div class="sub">unique counterparties</div></div>
+        <div class="kpi"><div class="label">เชื่อมโยงสองทาง</div><div class="value" style="color:var(--purple)" id="kpiBi">0</div><div class="sub">รับและจ่ายกับบัญชีเดียวกัน</div></div>
+      </div>
+
+      <div class="tabs" id="tabs">
+        <button class="tab active" data-tab="overview">ภาพรวม</button>
+        <button class="tab" data-tab="accounts">สรุปแต่ละบัญชี</button>
+        <button class="tab" data-tab="network">Link Network</button>
+        <button class="tab" data-tab="links">เส้นเชื่อม Source → Target</button>
+        <button class="tab" data-tab="transactions">รายการธุรกรรม</button>
+        <button class="tab" data-tab="rapid">Rapid Flow</button>
+        <button class="tab" data-tab="banks">สรุปธนาคาร</button>
+      </div>
+
+      <div class="tab-pane active" id="pane-overview">
+        <div class="grid-2">
+          <div class="inner-card"><h3>🏦 คู่บัญชีที่มียอดเงินสูงสุด</h3><div id="topAccounts"></div></div>
+          <div class="inner-card"><h3>🔗 เส้นเชื่อมที่มียอดสูงสุด</h3><div id="topLinks"></div></div>
+        </div>
+      </div>
+
+      <div class="tab-pane" id="pane-accounts">
+        <div class="toolbar"><input class="search" id="accountSearch" placeholder="ค้นหาเลขบัญชี / ธนาคาร..."/><button class="btn btn-ghost" data-export="accounts">⬇ CSV</button></div>
+        <div class="table-wrap"><table class="data-table"><thead><tr><th>บัญชีคู่สัมพันธ์</th><th>ธนาคาร</th><th class="money">เงินเข้า (ครั้ง)</th><th class="money">เงินเข้า (บาท)</th><th class="money">เงินออก (ครั้ง)</th><th class="money">เงินออก (บาท)</th><th class="money">ยอดรวม</th><th class="money">สุทธิ</th><th>ความสัมพันธ์</th></tr></thead><tbody id="accountTbody"></tbody></table></div>
+      </div>
+
+      <div class="tab-pane" id="pane-network">
+        <div class="network-controls">
+          <div class="toolbar">
+            <input class="search" id="networkSearch" placeholder="ค้นหาเลขบัญชี / ธนาคาร / Tag..." />
+            <button class="btn btn-ghost" id="networkFocusBtn">⌖ Focus</button>
+            <label>ทิศทาง</label><select id="networkDirection" class="compact"><option value="">ทั้งหมด</option><option value="IN">เงินเข้า</option><option value="OUT">เงินออก</option></select>
+            <label>ประเภท</label><select id="networkRelation" class="compact"><option value="">ทั้งหมด</option><option value="BI">สองทาง</option><option value="IN">รับเข้าเท่านั้น</option><option value="OUT">จ่ายออกเท่านั้น</option></select>
+            <label>ระดับ</label><select id="networkDepth" class="compact"><option value="1">1 ชั้น</option><option value="2" selected>2 ชั้น</option><option value="3">3 ชั้น</option></select>
+            <label>Node</label><select id="networkLimit" class="compact"><option>15</option><option selected>25</option><option>40</option><option>60</option><option>100</option></select>
+          </div>
+          <div class="toolbar">
+            <label>ยอดขั้นต่ำ</label><input id="networkMinAmount" type="number" min="0" step="100" placeholder="0" />
+            <label>ยอดสูงสุด</label><input id="networkMaxAmount" type="number" min="0" step="100" placeholder="ไม่จำกัด" />
+            <label>วันที่</label><input id="networkDateStart" type="datetime-local" step="60" /><span style="color:var(--muted)">–</span><input id="networkDateEnd" type="datetime-local" step="60" />
+            <label class="mini-switch"><input id="showEdgeLabels" type="checkbox" checked /> แสดงยอดบนเส้น</label>
+            <button class="btn btn-ghost" id="clearNetworkFilterBtn">ล้างตัวกรอง</button>
+          </div>
+          <div class="toolbar">
+            <div class="timeline-box"><span class="timeline-label" id="timelineStartLabel">-</span><div class="timeline-sliders"><input id="timelineStart" type="range" min="0" max="1000" value="0" /><input id="timelineEnd" type="range" min="0" max="1000" value="1000" /></div><span class="timeline-label" id="timelineEndLabel">-</span></div>
+            <button class="btn btn-ghost" id="selectedOnlyBtn">◉ เฉพาะที่เลือก</button>
+            <button class="btn btn-ghost" id="showHiddenBtn">👁 แสดงที่ซ่อน</button>
+            <button class="btn btn-ghost" id="resetNetworkBtn">↺ จัดตำแหน่งใหม่</button>
+          </div>
+          <div class="toolbar">
+            <button class="btn btn-ghost" id="saveLayoutBtn">💾 บันทึก Layout</button>
+            <button class="btn btn-ghost" id="loadLayoutBtn">↥ โหลด Layout</button>
+            <button class="btn btn-ghost" id="saveSvgBtn">⬇ SVG</button>
+            <button class="btn btn-ghost" id="savePngBtn">⬇ PNG</button>
+            <button class="btn btn-ghost" id="printNetworkBtn">🖨 รายงาน A4</button>
+            <span class="network-help"><b>ลาก Node</b> = ย้าย • <b>ลากเส้น</b> = ดัด • <b>Ctrl+Click</b> = เลือกหลายบัญชี • <b>คลิกขวา</b> = เมนูบัญชี</span>
+          </div>
+        </div>
+        <div class="network-stats" id="networkStats"></div>
+        <div class="network-chips" id="networkRanking"></div>
+        <div class="network-wrap" id="networkWrap">
+          <svg id="networkSvg" viewBox="0 0 1200 700" preserveAspectRatio="xMidYMid meet"></svg>
+          <div class="network-legend"><span class="legend-item"><span class="legend-line" style="background:var(--green)"></span> เงินเข้า</span><span class="legend-item"><span class="legend-line" style="background:var(--red)"></span> เงินออก</span><span class="legend-item"><span class="legend-line" style="background:var(--purple)"></span> สองทาง</span></div>
+          <div class="node-detail" id="nodeDetail"></div>
+        </div>
+        <div class="network-context" id="networkContext"></div>
+      </div>
+
+      <div class="tab-pane" id="pane-links">
+        <div class="toolbar"><input class="search" id="linkSearch" placeholder="ค้นหา Source / Target / ธนาคาร..."/><button class="btn btn-ghost" data-export="links">⬇ CSV</button></div>
+        <div class="table-wrap"><table class="data-table"><thead><tr><th>Source</th><th>Target</th><th>ธนาคารคู่สัมพันธ์</th><th>ทิศทาง</th><th class="money">จำนวนครั้ง</th><th class="money">ยอดรวม</th><th>ครั้งแรก</th><th>ครั้งล่าสุด</th></tr></thead><tbody id="linkTbody"></tbody></table></div>
+      </div>
+
+      <div class="tab-pane" id="pane-transactions">
+        <div class="toolbar"><input class="search" id="txSearch" placeholder="ค้นหาบัญชี / Remark / สถานที่..."/><select id="dirFilter"><option value="">ทุกทิศทาง</option><option value="IN">เงินเข้า</option><option value="OUT">เงินออก</option><option value="UNKNOWN">ไม่ทราบ</option></select><button class="btn btn-ghost" data-export="transactions">⬇ CSV</button></div>
+        <div class="table-wrap"><table class="data-table"><thead><tr><th>#</th><th>วันที่</th><th>เวลา</th><th>ทิศทาง</th><th>บัญชีต้นทาง</th><th>บัญชีปลายทาง</th><th>คู่บัญชี</th><th>ธนาคาร</th><th class="money">จำนวนเงิน</th><th>ประเภท</th><th>สถานที่</th><th>Remarks</th></tr></thead><tbody id="txTbody"></tbody></table></div>
+      </div>
+
+      <div class="tab-pane" id="pane-rapid">
+        <div class="warnbox">⚠️ Rapid Flow เป็นเพียง “คู่รายการที่ควรตรวจสอบต่อ” โดยจับเงินเข้าแล้วมีเงินออกภายในช่วงเวลาที่กำหนด และรองรับค่าคลาดเคลื่อนของยอดเงิน ไม่ได้ยืนยันว่าเป็นเงินก้อนเดียวกัน</div>
+        <div class="toolbar"><button class="btn btn-ghost" data-export="rapid">⬇ CSV</button></div>
+        <div class="table-wrap"><table class="data-table"><thead><tr><th>เวลาเงินเข้า</th><th>จากบัญชี</th><th class="money">ยอดเข้า</th><th>เวลาเงินออก</th><th>ไปบัญชี</th><th class="money">ยอดออก</th><th class="money">ต่างกัน</th><th class="money">ห่างกัน (นาที)</th></tr></thead><tbody id="rapidTbody"></tbody></table></div>
+      </div>
+
+      <div class="tab-pane" id="pane-banks">
+        <div class="toolbar"><button class="btn btn-ghost" data-export="banks">⬇ CSV</button></div>
+        <div class="table-wrap"><table class="data-table"><thead><tr><th>ธนาคารคู่สัมพันธ์</th><th class="money">เงินเข้า (ครั้ง)</th><th class="money">เงินเข้า (บาท)</th><th class="money">เงินออก (ครั้ง)</th><th class="money">เงินออก (บาท)</th><th class="money">ยอดรวม</th></tr></thead><tbody id="bankTbody"></tbody></table></div>
+      </div>
+    </section>
+
+    <div class="footer">Money Flow Link Analysis • MEGALINK • ข้อมูลทั้งหมดประมวลผลภายใน Browser</div>
+  </main>
+</div>
+
+<script>
+'use strict';
+
+// ---------- Utilities ----------
+const $ = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+const fmtMoney = n => new Intl.NumberFormat('th-TH',{minimumFractionDigits:2,maximumFractionDigits:2}).format(Number(n||0));
+const fmtInt = n => new Intl.NumberFormat('th-TH').format(Number(n||0));
+const esc = s => String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const norm = s => String(s??'').trim().toLowerCase().replace(/[\u00a0\s_\-\/\\()\[\].,:]+/g,' ').trim();
+const onlyDigits = s => String(s??'').replace(/[๐-๙]/g,d=>'0123456789'['๐๑๒๓๔๕๖๗๘๙'.indexOf(d)]).replace(/\D/g,'');
+function shortAccount(s){s=String(s||'-');return s.length>16?s.slice(0,7)+'…'+s.slice(-6):s}
+function status(msg,type='info'){const el=$('#status');el.className='status show '+type;el.textContent=msg}
+function clearStatus(){const el=$('#status');el.className='status';el.textContent=''}
+function debounce(fn,ms=180){let t;return(...a)=>{clearTimeout(t);t=setTimeout(()=>fn(...a),ms)}}
+function xmlDecode(s){return String(s??'').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').replace(/&apos;/g,"'").replace(/&amp;/g,'&').replace(/&#(\d+);/g,(_,n)=>String.fromCharCode(+n)).replace(/&#x([0-9a-f]+);/gi,(_,n)=>String.fromCharCode(parseInt(n,16)))}
+function attr(tag,name){const m=tag.match(new RegExp('(?:^|\\s)'+name.replace(':','\\:')+'="([^"]*)"'));return m?xmlDecode(m[1]):''}
+function colIndex(ref){const m=String(ref).match(/^([A-Z]+)/i);if(!m)return 0;let n=0;for(const ch of m[1].toUpperCase())n=n*26+(ch.charCodeAt(0)-64);return n-1}
+function excelDate(serial,fmt=''){
+  const ms=(Number(serial)-25569)*86400000; const d=new Date(ms);
+  if(Number.isNaN(d.getTime())) return String(serial);
+  const Y=d.getUTCFullYear(), M=String(d.getUTCMonth()+1).padStart(2,'0'), D=String(d.getUTCDate()).padStart(2,'0');
+  const h=String(d.getUTCHours()).padStart(2,'0'), m=String(d.getUTCMinutes()).padStart(2,'0'), s=String(d.getUTCSeconds()).padStart(2,'0');
+  const f=String(fmt).toLowerCase().replace(/"[^"]*"/g,'').replace(/\[[^\]]*\]/g,'');
+  const hasDate=/[yd]/.test(f), hasTime=/[hs]/.test(f)||(/h/.test(f)&&/m/.test(f));
+  if(hasDate&&hasTime)return `${Y}-${M}-${D} ${h}:${m}:${s}`;
+  if(hasTime&&!hasDate)return `${h}:${m}:${s}`;
+  return `${Y}-${M}-${D}`;
+}
+function toAmount(v){if(typeof v==='number')return Number.isFinite(v)?v:0;let s=String(v??'').trim().replace(/[฿,$\s]/g,'').replace(/,/g,'');if(/^\(.*\)$/.test(s))s='-'+s.slice(1,-1);const n=Number(s);return Number.isFinite(n)?n:0}
+function extractAccount(v){
+  let s=String(v??'').replace(/[๐-๙]/g,d=>'0123456789'['๐๑๒๓๔๕๖๗๘๙'.indexOf(d)]);
+  const parts=s.match(/[0-9Xx*][0-9Xx*\-\s]{5,}[0-9Xx*]/g)||[];
+  if(!parts.length){const d=onlyDigits(s);return d.length>=6?d:''}
+  const cleaned=parts.map(x=>x.replace(/[\s\-]/g,'')).sort((a,b)=>b.length-a.length);return cleaned[0]||'';
+}
+function beneficiaryBank(v){
+  const s=String(v??'').trim(); if(!s)return '';
+  const slash=s.split('/'); if(slash.length>1 && onlyDigits(slash[0]).length<5)return slash[0].trim();
+  const before=s.replace(/[0-9Xx*\-\s]{6,}/g,'').replace(/[\/:|]+$/,'').trim(); return before.length<=40?before:'';
+}
+function dtLabel(t){return `${t.date||'-'} ${t.time||''}`.trim()}
+function parseDateTime(dateStr,timeStr){
+  let ds=String(dateStr||'').trim(), ts=String(timeStr||'').trim(); if(!ds)return NaN;
+  if(ds.includes(' ')&&!ts){const p=ds.split(/\s+/);ds=p[0];ts=p[1]||''}
+  let Y,M,D; let m;
+  if((m=ds.match(/^(\d{4})[-\/.](\d{1,2})[-\/.](\d{1,2})$/))){Y=+m[1];M=+m[2];D=+m[3]}
+  else if((m=ds.match(/^(\d{1,2})[-\/.](\d{1,2})[-\/.](\d{2,4})$/))){D=+m[1];M=+m[2];Y=+m[3]; if(Y<100)Y+=2000}
+  else return NaN;
+  if(Y>2400)Y-=543; let h=0,mi=0,se=0;
+  if((m=ts.match(/(\d{1,2}):(\d{1,2})(?::(\d{1,2}))?/))){h=+m[1];mi=+m[2];se=+(m[3]||0)}
+  return Date.UTC(Y,M-1,D,h,mi,se);
+}
+
+// ---------- Minimal XLSX reader (no external library; modern Chrome/Edge) ----------
+class ZipReader{
+  constructor(buffer){this.u8=new Uint8Array(buffer);this.dv=new DataView(buffer);this.entries=new Map();this._index()}
+  _u16(o){return this.dv.getUint16(o,true)} _u32(o){return this.dv.getUint32(o,true)}
+  _index(){
+    let eocd=-1,start=Math.max(0,this.u8.length-66000); for(let i=this.u8.length-22;i>=start;i--){if(this._u32(i)===0x06054b50){eocd=i;break}}
+    if(eocd<0)throw new Error('ไม่พบโครงสร้าง ZIP ของไฟล์ XLSX');
+    const total=this._u16(eocd+10), cdOff=this._u32(eocd+16); let p=cdOff; const td=new TextDecoder('utf-8');
+    for(let i=0;i<total;i++){
+      if(this._u32(p)!==0x02014b50)break;
+      const method=this._u16(p+10), csize=this._u32(p+20), usize=this._u32(p+24), nlen=this._u16(p+28), xlen=this._u16(p+30), clen=this._u16(p+32), loff=this._u32(p+42);
+      const name=td.decode(this.u8.slice(p+46,p+46+nlen)); this.entries.set(name,{method,csize,usize,loff}); p+=46+nlen+xlen+clen;
+    }
+  }
+  async bytes(name){
+    const e=this.entries.get(name); if(!e)throw new Error('ไม่พบ '+name);
+    const p=e.loff; if(this._u32(p)!==0x04034b50)throw new Error('Local header ไม่ถูกต้อง');
+    const nlen=this._u16(p+26),xlen=this._u16(p+28),start=p+30+nlen+xlen, comp=this.u8.slice(start,start+e.csize);
+    if(e.method===0)return comp;
+    if(e.method===8){
+      if(typeof DecompressionStream==='undefined')throw new Error('Browser นี้ยังไม่รองรับ DecompressionStream กรุณาใช้ Chrome / Edge รุ่นใหม่');
+      const stream=new Blob([comp]).stream().pipeThrough(new DecompressionStream('deflate-raw')); return new Uint8Array(await new Response(stream).arrayBuffer());
+    }
+    throw new Error('Compression method '+e.method+' ยังไม่รองรับ');
+  }
+  async text(name){return new TextDecoder('utf-8').decode(await this.bytes(name))}
+  has(name){return this.entries.has(name)}
+}
+function normalizePath(base,target){
+  if(target.startsWith('/'))return target.replace(/^\//,''); const stack=base.split('/');stack.pop();
+  for(const part of target.split('/')){if(part==='..')stack.pop();else if(part!=='.')stack.push(part)}return stack.join('/');
+}
+async function readXlsx(buffer){
+  const zip=new ZipReader(buffer); const wbxml=await zip.text('xl/workbook.xml'); const relxml=await zip.text('xl/_rels/workbook.xml.rels');
+  const rels={}; for(const m of relxml.matchAll(/<Relationship\b([^>]+?)(?:\/>|>)/g)){const a=m[1];rels[attr(a,'Id')]=attr(a,'Target')}
+  const sheets=[]; for(const m of wbxml.matchAll(/<sheet\b([^>]+?)(?:\/>|>)/g)){const a=m[1],id=attr(a,'r:id'); if(id&&rels[id])sheets.push({name:attr(a,'name')||('Sheet '+(sheets.length+1)),path:normalizePath('xl/workbook.xml',rels[id])})}
+  let shared=[]; if(zip.has('xl/sharedStrings.xml')){const sx=await zip.text('xl/sharedStrings.xml'); for(const m of sx.matchAll(/<si\b[^>]*>([\s\S]*?)<\/si>/g)){let text='';for(const t of m[1].matchAll(/<t\b[^>]*>([\s\S]*?)<\/t>/g))text+=xmlDecode(t[1].replace(/<[^>]+>/g,''));shared.push(text)}}
+  let styles={formats:[],dateStyles:new Set()}; if(zip.has('xl/styles.xml'))styles=parseStyles(await zip.text('xl/styles.xml'));
+  const parsed=[]; for(const s of sheets){parsed.push({name:s.name,rows:parseWorksheet(await zip.text(s.path),shared,styles)})}
+  return parsed;
+}
+function parseStyles(xml){
+  const custom={}; for(const m of xml.matchAll(/<numFmt\b([^>]+?)(?:\/>|>)/g)){const a=m[1];custom[+attr(a,'numFmtId')]=attr(a,'formatCode')}
+  const builtDate=new Set([14,15,16,17,18,19,20,21,22,27,28,29,30,31,32,33,34,35,36,45,46,47,50,51,52,53,54,55,56,57,58]);
+  const builtFmt={14:'m/d/yy',15:'d-mmm-yy',16:'d-mmm',17:'mmm-yy',18:'h:mm AM/PM',19:'h:mm:ss AM/PM',20:'h:mm',21:'h:mm:ss',22:'m/d/yy h:mm',45:'mm:ss',46:'[h]:mm:ss',47:'mmss.0'};
+  const formats=[],dateStyles=new Set(); const block=(xml.match(/<cellXfs\b[^>]*>([\s\S]*?)<\/cellXfs>/)||[])[1]||''; let i=0;
+  for(const m of block.matchAll(/<xf\b([^>]+?)(?:\/>|>)/g)){const id=+attr(m[1],'numFmtId')||0,fmt=custom[id]||builtFmt[id]||'';formats[i]=fmt;const clean=fmt.toLowerCase().replace(/"[^"]*"/g,'').replace(/\[[^\]]*\]/g,'');if(builtDate.has(id)||/[yd]/.test(clean)||(/[hs]/.test(clean)&&/m/.test(clean)))dateStyles.add(i);i++}
+  return {formats,dateStyles};
+}
+function parseWorksheet(xml,shared,styles){
+  const rows=[]; for(const rm of xml.matchAll(/<row\b[^>]*>([\s\S]*?)<\/row>/g)){
+    const row=[]; for(const cm of rm[1].matchAll(/<c\b([^>]*?)(?:\/>|>([\s\S]*?)<\/c>)/g)){
+      const a=cm[1],body=cm[2]||'',ref=attr(a,'r'),idx=colIndex(ref),type=attr(a,'t'),si=+attr(a,'s')||0; let val='';
+      if(type==='inlineStr'){for(const tm of body.matchAll(/<t\b[^>]*>([\s\S]*?)<\/t>/g))val+=xmlDecode(tm[1].replace(/<[^>]+>/g,''))}
+      else {const vm=body.match(/<v\b[^>]*>([\s\S]*?)<\/v>/); const raw=vm?xmlDecode(vm[1]):''; if(type==='s')val=shared[+raw]??''; else if(type==='b')val=raw==='1'?'TRUE':'FALSE'; else if(styles.dateStyles.has(si)&&raw!=='')val=excelDate(raw,styles.formats[si]||''); else {const fmt=styles.formats[si]||''; if(/^0+$/.test(fmt)&&/^\d+$/.test(raw))val=raw.padStart(fmt.length,'0'); else val=raw}}
+      row[idx]=val;
+    } rows.push(row);
+  } return rows;
+}
+function parseCSV(text){
+  text=text.replace(/^\uFEFF/,''); const lines=text.split(/\r?\n/).slice(0,8); const candidates=[',','\t',';','|']; let delim=',',best=-1;
+  for(const d of candidates){const sc=lines.reduce((a,l)=>a+(l.split(d).length-1),0);if(sc>best){best=sc;delim=d}}
+  const out=[];let row=[],field='',q=false;
+  for(let i=0;i<text.length;i++){const c=text[i];if(q){if(c==='"'&&text[i+1]==='"'){field+='"';i++}else if(c==='"')q=false;else field+=c}else{if(c==='"')q=true;else if(c===delim){row.push(field);field=''}else if(c==='\n'){row.push(field.replace(/\r$/,''));out.push(row);row=[];field=''}else field+=c}}
+  if(field||row.length){row.push(field.replace(/\r$/,''));out.push(row)}return out;
+}
+
+// ---------- Column detection ----------
+const FIELDS=[
+  ['date','Transaction Date',['transaction date','date','วันที่ทำรายการ','วันที่รายการ','วันที่']],
+  ['time','Transaction Time',['transaction time','time','เวลาทำรายการ','เวลา']],
+  ['bank','Bank',['bank','ธนาคาร']],
+  ['terminal','Terminal ID',['terminal id','terminal','รหัส terminal']],
+  ['location','Transaction Location',['transaction location','location','สถานที่ทำรายการ','สถานที่']],
+  ['type','Transaction Type',['transaction type','type','ประเภทรายการ','ประเภท']],
+  ['originBank','Originating Bank',['originating bank','origin bank','ธนาคารต้นทาง','ธนาคารผู้โอน']],
+  ['originAccount','Originating Account No.',['originating account no','originating account','origin account no','origin account','บัญชีต้นทาง','เลขบัญชีต้นทาง','บัญชีผู้โอน']],
+  ['beneficiaryBank','Beneficiary Bank',['beneficiary bank account no','beneficiary bank / account no','beneficiary bank','ธนาคารปลายทาง','ธนาคารผู้รับ']],
+  ['beneficiaryAccount','Beneficiary Account No.',['beneficiary bank account no','beneficiary bank / account no','beneficiary account no','beneficiary account','account no','บัญชีปลายทาง','เลขบัญชีปลายทาง','บัญชีผู้รับ']],
+  ['amount','Transaction Amount (THB)',['transaction amount thb','transaction amount','amount thb','amount','จำนวนเงิน','ยอดเงิน']],
+  ['remarks','Remarks',['remarks','remark','description','details','รายละเอียด','หมายเหตุ']]
+];
+function aliasMatch(header,aliases){const h=norm(header);let best=0;for(const a0 of aliases){const a=norm(a0);if(h===a)return 100;if(h.includes(a)||a.includes(h))best=Math.max(best,60)}return best}
+function detectHeader(rows){let best={idx:0,score:-1};for(let r=0;r<Math.min(rows.length,35);r++){let score=0;const cells=rows[r]||[];for(const cell of cells){let m=0;for(const f of FIELDS)m=Math.max(m,aliasMatch(cell,f[2]));if(m>=60)score++}if(score>best.score)best={idx:r,score}}return best}
+function autoMapping(headers){const map={};for(const [key,,aliases] of FIELDS){let bi=-1,bs=0;headers.forEach((h,i)=>{const s=aliasMatch(h,aliases);if(s>bs){bs=s;bi=i}});map[key]=bs>=60?bi:-1}return map}
+
+// ---------- State ----------
+function freshNetworkUI(){return {selected:new Set(),hidden:new Set(),focusRoot:'',focusOnly:false,timeMin:NaN,timeMax:NaN,selectedOnly:false}}
+let state={file:null,sheets:[],sheetIndex:0,headerRow:0,headers:[],mapping:{},analysis:null,networkLayout:{nodes:{},bends:{},pinned:{}},networkMeta:{},networkUI:freshNetworkUI(),layoutKey:''};
+const fileInput=$('#fileInput'), dropzone=$('#dropzone');
+dropzone.addEventListener('dragover',e=>{e.preventDefault();dropzone.classList.add('drag')});dropzone.addEventListener('dragleave',()=>dropzone.classList.remove('drag'));dropzone.addEventListener('drop',e=>{e.preventDefault();dropzone.classList.remove('drag');if(e.dataTransfer.files[0])loadFile(e.dataTransfer.files[0])});
+fileInput.addEventListener('change',()=>{if(fileInput.files[0])loadFile(fileInput.files[0])});
+
+async function loadFile(file){
+  try{
+    clearStatus(); state={file,sheets:[],sheetIndex:0,headerRow:0,headers:[],mapping:{},analysis:null,networkLayout:{nodes:{},bends:{},pinned:{}},networkMeta:{},networkUI:freshNetworkUI(),layoutKey:''}; $('#dashboard').classList.remove('show'); $('#mappingWrap').classList.remove('show');
+    $('#fileMeta').classList.add('show'); $('#fileName').textContent=file.name; $('#fileDetail').textContent=`${(file.size/1024).toFixed(1)} KB • กำลังอ่านไฟล์...`; $('#fileType').textContent=(file.name.split('.').pop()||'').toUpperCase(); status('กำลังอ่านและตรวจโครงสร้างไฟล์...','info');
+    const ext=file.name.split('.').pop().toLowerCase();
+    if(ext==='xlsx'){state.sheets=await readXlsx(await file.arrayBuffer())}
+    else if(ext==='csv'){state.sheets=[{name:'CSV',rows:parseCSV(await file.text())}]}
+    else throw new Error('รองรับเฉพาะ .xlsx และ .csv ในเวอร์ชัน Offline นี้');
+    if(!state.sheets.length)throw new Error('ไม่พบชีตข้อมูลในไฟล์');
+    const sel=$('#sheetSelect');sel.innerHTML='';state.sheets.forEach((s,i)=>{const o=document.createElement('option');o.value=i;o.textContent=`${s.name} (${fmtInt(s.rows.length)} แถว)`;sel.appendChild(o)});sel.disabled=false;
+    // choose sheet with strongest header match
+    let best={i:0,score:-1};state.sheets.forEach((s,i)=>{const d=detectHeader(s.rows);if(d.score>best.score)best={i,score:d.score}});state.sheetIndex=best.i;sel.value=best.i;prepareSheet();
+    const inferred=inferMainAccountFromFilename(file.name,state.sheets[best.i].rows);if(inferred)$('#mainAccount').value=inferred;
+    $('#fileDetail').textContent=`${(file.size/1024).toFixed(1)} KB • ${state.sheets.length} ชีต • ตรวจพบหัวตารางแถว ${state.headerRow+1}`;
+    status(`อ่านไฟล์สำเร็จ — พบ ${fmtInt(currentDataRows().length)} รายการ กรุณาตรวจ Column Mapping แล้วกด “วิเคราะห์เส้นเงิน”`,'ok');
+    $('#analyzeBtn').disabled=false;
+  }catch(err){console.error(err);status('อ่านไฟล์ไม่สำเร็จ: '+err.message,'err');$('#analyzeBtn').disabled=true}
+}
+$('#sheetSelect').addEventListener('change',()=>{state.sheetIndex=+$('#sheetSelect').value;prepareSheet()});
+function prepareSheet(){
+  const rows=state.sheets[state.sheetIndex].rows;const d=detectHeader(rows);state.headerRow=d.idx;state.headers=(rows[d.idx]||[]).map(x=>String(x??'').trim());state.mapping=autoMapping(state.headers);
+  // Some bank exports merge the header “Beneficiary Bank / Account No.” across 2 columns: bank in the first, account in the next blank-header column.
+  const bb=state.mapping.beneficiaryBank,ba=state.mapping.beneficiaryAccount;if(bb>=0&&ba===bb&&bb+1<state.headers.length&&!state.headers[bb+1])state.mapping.beneficiaryAccount=bb+1;
+  renderMapping();
+}
+function renderMapping(){
+  const grid=$('#mapGrid');grid.innerHTML='';for(const [key,label] of FIELDS){const div=document.createElement('div');div.className='field';const lab=document.createElement('label');lab.textContent=label;const sel=document.createElement('select');sel.dataset.key=key;sel.innerHTML='<option value="-1">— ไม่ใช้ —</option>'+state.headers.map((h,i)=>`<option value="${i}" ${state.mapping[key]===i?'selected':''}>${esc(h||('Column '+(i+1)))}</option>`).join('');sel.addEventListener('change',()=>state.mapping[key]=+sel.value);div.append(lab,sel);grid.appendChild(div)}$('#mappingWrap').classList.add('show')
+}
+function currentDataRows(){return state.sheets[state.sheetIndex].rows.slice(state.headerRow+1).filter(r=>r.some(v=>String(v??'').trim()!==''))}
+function inferMainAccountFromFilename(name,rows){
+  const cands=(name.replace(/[๐-๙]/g,d=>'0123456789'['๐๑๒๓๔๕๖๗๘๙'.indexOf(d)]).match(/\d{8,16}/g)||[]).sort((a,b)=>b.length-a.length);if(cands.length)return cands[0];return ''
+}
+
+// ---------- Analysis ----------
+$('#analyzeBtn').addEventListener('click',analyze);
+function cell(row,key){const i=state.mapping[key];return i>=0?(row[i]??''):''}
+function directionFrom(t,main){
+  const o=normalizeAcct(t.origin),b=normalizeAcct(t.beneficiaryAccount),m=normalizeAcct(main); if(m){if(o===m&&b!==m)return'OUT';if(b===m&&o!==m)return'IN'}
+  const txt=norm(`${t.type} ${t.remarks}`);const inWords=['transfer in','credit','deposit','รับโอน','เงินโอนเข้า','เงินเข้า','ฝากเข้า','รับเงิน'];const outWords=['transfer out','debit','withdraw','payment','ถอน','โอนออก','หักบัญชี','ชำระ','จ่าย'];
+  if(inWords.some(x=>txt.includes(x)))return'IN';if(outWords.some(x=>txt.includes(x)))return'OUT';if(o&&m&&o!==m&&!b)return'IN';if(b&&m&&b!==m&&!o)return'OUT';if(o&&m&&o!==m)return'IN';if(b&&m&&b!==m)return'OUT';return'UNKNOWN'
+}
+function normalizeAcct(s){return String(s||'').replace(/[\s\-]/g,'').toUpperCase()}
+function analyze(){
+  try{
+    const main=normalizeAcct($('#mainAccount').value.trim()); if(!main){status('กรุณาระบุ “บัญชีหลักที่กำลังวิเคราะห์” เพื่อแยกเงินเข้า/ออกให้ถูกต้อง','err');return}
+    if(state.mapping.amount<0){status('ไม่พบคอลัมน์จำนวนเงิน กรุณาเลือก Transaction Amount ใน Column Mapping','err');return}
+    const rows=currentDataRows(),tx=[];let idx=0;
+    for(const r of rows){
+      const benBankRaw=String(cell(r,'beneficiaryBank')??'').trim(),benAccRaw=String(cell(r,'beneficiaryAccount')??'').trim(); const t={id:++idx,date:String(cell(r,'date')??'').trim(),time:String(cell(r,'time')??'').trim(),bank:String(cell(r,'bank')??'').trim(),terminal:String(cell(r,'terminal')??'').trim(),location:String(cell(r,'location')??'').trim(),type:String(cell(r,'type')??'').trim(),originBank:String(cell(r,'originBank')??'').trim(),origin:extractAccount(cell(r,'originAccount')),originRaw:String(cell(r,'originAccount')??'').trim(),beneficiaryAccount:extractAccount(benAccRaw)||extractAccount(benBankRaw),beneficiaryRaw:benAccRaw||benBankRaw,beneficiaryBank:beneficiaryBank(benBankRaw)||beneficiaryBank(benAccRaw),amount:Math.abs(toAmount(cell(r,'amount'))),remarks:String(cell(r,'remarks')??'').trim()};
+      if(!t.amount && !t.origin && !t.beneficiaryAccount && !t.remarks)continue; t.direction=directionFrom(t,main);
+      if(t.direction==='IN'){t.counterparty=t.origin||t.originRaw||'UNKNOWN';t.counterpartyBank=t.originBank||'';t.source=t.counterparty;t.target=main}
+      else if(t.direction==='OUT'){t.counterparty=t.beneficiaryAccount||t.beneficiaryRaw||'UNKNOWN';t.counterpartyBank=t.beneficiaryBank||'';t.source=main;t.target=t.counterparty}
+      else {t.counterparty=(t.origin&&normalizeAcct(t.origin)!==main?t.origin:(t.beneficiaryAccount&&normalizeAcct(t.beneficiaryAccount)!==main?t.beneficiaryAccount:'UNKNOWN'));t.counterpartyBank=t.originBank||t.beneficiaryBank||'';t.source=t.origin||'?';t.target=t.beneficiaryAccount||'?'}
+      t.timestamp=parseDateTime(t.date,t.time);tx.push(t)
+    }
+    const A=buildAnalysis(tx,main,+$('#rapidMinutes').value||60,+($('#rapidTolerance')?.value||0));state.analysis=A;state.layoutKey=makeLayoutKey(main);loadNetworkPersistence();initNetworkPeriod(A);renderAll(A);$('#dashboard').classList.add('show');status(`วิเคราะห์สำเร็จ — ${fmtInt(tx.length)} รายการ • ${fmtInt(A.accounts.length)} คู่บัญชี • ${fmtInt(A.links.length)} เส้นเชื่อม`,'ok');document.querySelector('#dashboard').scrollIntoView({behavior:'smooth',block:'start'})
+  }catch(err){console.error(err);status('วิเคราะห์ไม่สำเร็จ: '+err.message,'err')}
+}
+function buildAnalysis(tx,main,rapidMinutes,rapidTolerance=0){
+  let inAmt=0,outAmt=0,inCount=0,outCount=0;const am=new Map(),lm=new Map(),bm=new Map();
+  for(const t of tx){
+    if(t.direction==='IN'){inAmt+=t.amount;inCount++}if(t.direction==='OUT'){outAmt+=t.amount;outCount++}
+    if(t.direction!=='UNKNOWN'&&t.counterparty&&t.counterparty!=='UNKNOWN'){
+      const k=normalizeAcct(t.counterparty),a=am.get(k)||{account:t.counterparty,bank:t.counterpartyBank||'',inCount:0,inAmount:0,outCount:0,outAmount:0,transactions:[]};if(!a.bank&&t.counterpartyBank)a.bank=t.counterpartyBank;if(t.direction==='IN'){a.inCount++;a.inAmount+=t.amount}else{a.outCount++;a.outAmount+=t.amount}a.transactions.push(t);am.set(k,a);
+      const lk=`${t.source}→${t.target}|${t.counterpartyBank||''}`,l=lm.get(lk)||{source:t.source,target:t.target,bank:t.counterpartyBank||'',direction:t.direction,count:0,amount:0,first:t,last:t,transactions:[]};l.count++;l.amount+=t.amount;l.transactions.push(t);if(compareTx(t,l.first)<0)l.first=t;if(compareTx(t,l.last)>0)l.last=t;lm.set(lk,l);
+      const bk=t.counterpartyBank||'ไม่ระบุธนาคาร',b=bm.get(bk)||{bank:bk,inCount:0,inAmount:0,outCount:0,outAmount:0};if(t.direction==='IN'){b.inCount++;b.inAmount+=t.amount}else{b.outCount++;b.outAmount+=t.amount}bm.set(bk,b)
+    }
+  }
+  const accounts=[...am.values()].map(a=>({...a,total:a.inAmount+a.outAmount,net:a.inAmount-a.outAmount,relation:a.inCount&&a.outCount?'สองทาง':a.inCount?'เงินเข้า':'เงินออก'})).sort((a,b)=>b.total-a.total);
+  const links=[...lm.values()].sort((a,b)=>b.amount-a.amount),banks=[...bm.values()].map(b=>({...b,total:b.inAmount+b.outAmount})).sort((a,b)=>b.total-a.total);const rapid=findRapid(tx,rapidMinutes,rapidTolerance);
+  return {main,tx,inAmt,outAmt,inCount,outCount,accounts,links,banks,rapid,bi:accounts.filter(a=>a.inCount&&a.outCount).length}
+}
+function compareTx(a,b){const ta=Number.isFinite(a.timestamp)?a.timestamp:a.id,tb=Number.isFinite(b.timestamp)?b.timestamp:b.id;return ta-tb}
+function findRapid(tx,mins,tolerancePct=0){
+  const ins=tx.filter(t=>t.direction==='IN'&&Number.isFinite(t.timestamp)).sort((a,b)=>a.timestamp-b.timestamp),outs=tx.filter(t=>t.direction==='OUT'&&Number.isFinite(t.timestamp)).sort((a,b)=>a.timestamp-b.timestamp),res=[],usedOut=new Set(),windowMs=Math.max(1,mins)*60000,tol=Math.max(0,+tolerancePct||0)/100;
+  let start=0;
+  for(const i of ins){
+    while(start<outs.length&&outs[start].timestamp<i.timestamp)start++;
+    let best=null;
+    for(let j=start;j<outs.length;j++){
+      const o=outs[j],dt=o.timestamp-i.timestamp;if(dt>windowMs)break;if(usedOut.has(o.id))continue;
+      const base=Math.max(i.amount,0.01),diff=Math.abs(o.amount-i.amount),pct=diff/base;
+      if(pct<=tol+1e-12){const score=pct*1000000+dt;if(!best||score<best.score)best={o,score,diff,pct,dt}}
+    }
+    if(best){usedOut.add(best.o.id);res.push({inTx:i,outTx:best.o,inAmount:i.amount,outAmount:best.o.amount,amount:i.amount,difference:best.diff,diffPct:best.pct*100,minutes:best.dt/60000})}
+  }
+  return res.sort((a,b)=>a.minutes-b.minutes)
+}
+
+// ---------- Render ----------
+function renderAll(A){
+  $('#kpiRows').textContent=fmtInt(A.tx.length);$('#kpiIn').textContent='฿'+fmtMoney(A.inAmt);$('#kpiInCount').textContent=fmtInt(A.inCount)+' ครั้ง';$('#kpiOut').textContent='฿'+fmtMoney(A.outAmt);$('#kpiOutCount').textContent=fmtInt(A.outCount)+' ครั้ง';const net=A.inAmt-A.outAmt;$('#kpiNet').textContent=(net<0?'-':'')+'฿'+fmtMoney(Math.abs(net));$('#kpiNet').className='value '+(net>=0?'green':'red');$('#kpiCp').textContent=fmtInt(A.accounts.length);$('#kpiBi').textContent=fmtInt(A.bi);
+  renderBars('#topAccounts',A.accounts.slice(0,10).map(a=>({label:`${shortAccount(a.account)} ${a.bank?'• '+a.bank:''}`,value:a.total})));renderBars('#topLinks',A.links.slice(0,10).map(l=>({label:`${shortAccount(l.source)} → ${shortAccount(l.target)}`,value:l.amount})));
+  renderAccounts();renderLinks();renderTransactions();renderRapid();renderBanks();renderNetwork(+$('#networkLimit').value||25)
+}
+function renderBars(sel,items){const el=$(sel);if(!items.length){el.innerHTML='<div class="empty">ไม่มีข้อมูล</div>';return}const max=Math.max(...items.map(x=>x.value),1);el.innerHTML=items.map(x=>`<div class="bar-row"><div class="bar-label" title="${esc(x.label)}">${esc(x.label)}</div><div class="bar-track"><div class="bar-fill" style="width:${Math.max(2,x.value/max*100)}%"></div></div><div class="bar-val">฿${fmtMoney(x.value)}</div></div>`).join('')}
+function renderAccounts(q=''){const A=state.analysis;if(!A)return;const s=norm(q);const rows=A.accounts.filter(a=>!s||norm(`${a.account} ${a.bank}`).includes(s));$('#accountTbody').innerHTML=rows.length?rows.map(a=>`<tr><td><b>${esc(a.account)}</b></td><td>${esc(a.bank||'-')}</td><td class="money">${fmtInt(a.inCount)}</td><td class="money green">${fmtMoney(a.inAmount)}</td><td class="money">${fmtInt(a.outCount)}</td><td class="money red">${fmtMoney(a.outAmount)}</td><td class="money">${fmtMoney(a.total)}</td><td class="money ${a.net>=0?'green':'red'}">${a.net<0?'-':''}${fmtMoney(Math.abs(a.net))}</td><td><span class="tag ${a.relation==='เงินเข้า'?'in':a.relation==='เงินออก'?'out':'unknown'}">${esc(a.relation)}</span></td></tr>`).join(''):'<tr><td colspan="9" class="empty">ไม่พบข้อมูล</td></tr>'}
+function renderLinks(q=''){const A=state.analysis;if(!A)return;const s=norm(q);const rows=A.links.filter(l=>!s||norm(`${l.source} ${l.target} ${l.bank}`).includes(s));$('#linkTbody').innerHTML=rows.length?rows.map(l=>`<tr><td>${esc(l.source)}</td><td>${esc(l.target)}</td><td>${esc(l.bank||'-')}</td><td><span class="tag ${l.direction==='IN'?'in':'out'}">${l.direction==='IN'?'เงินเข้า':'เงินออก'}</span></td><td class="money">${fmtInt(l.count)}</td><td class="money">${fmtMoney(l.amount)}</td><td>${esc(dtLabel(l.first))}</td><td>${esc(dtLabel(l.last))}</td></tr>`).join(''):'<tr><td colspan="8" class="empty">ไม่พบข้อมูล</td></tr>'}
+function renderTransactions(q='',dir=''){const A=state.analysis;if(!A)return;const s=norm(q);let rows=A.tx.filter(t=>(!dir||t.direction===dir)&&(!s||norm(`${t.origin} ${t.beneficiaryAccount} ${t.counterparty} ${t.counterpartyBank} ${t.remarks} ${t.location}`).includes(s)));rows=rows.slice(0,3000);$('#txTbody').innerHTML=rows.length?rows.map(t=>`<tr><td>${t.id}</td><td>${esc(t.date||'-')}</td><td>${esc(t.time||'-')}</td><td><span class="tag ${t.direction==='IN'?'in':t.direction==='OUT'?'out':'unknown'}">${t.direction==='IN'?'เข้า':t.direction==='OUT'?'ออก':'?'}</span></td><td>${esc(t.origin||'-')}</td><td>${esc(t.beneficiaryAccount||'-')}</td><td><b>${esc(t.counterparty||'-')}</b></td><td>${esc(t.counterpartyBank||'-')}</td><td class="money">${fmtMoney(t.amount)}</td><td>${esc(t.type||'-')}</td><td>${esc(t.location||'-')}</td><td>${esc(t.remarks||'-')}</td></tr>`).join(''):'<tr><td colspan="12" class="empty">ไม่พบข้อมูล</td></tr>'}
+function renderRapid(){const A=state.analysis;if(!A)return;$('#rapidTbody').innerHTML=A.rapid.length?A.rapid.map(x=>`<tr><td>${esc(dtLabel(x.inTx))}</td><td>${esc(x.inTx.counterparty)}</td><td class="money green">${fmtMoney(x.inAmount)}</td><td>${esc(dtLabel(x.outTx))}</td><td>${esc(x.outTx.counterparty)}</td><td class="money red">${fmtMoney(x.outAmount)}</td><td class="money">${fmtMoney(x.difference)} (${x.diffPct.toFixed(2)}%)</td><td class="money">${x.minutes.toFixed(1)}</td></tr>`).join(''):'<tr><td colspan="8" class="empty">ไม่พบคู่รายการตามเงื่อนไข</td></tr>'}
+function renderBanks(){const A=state.analysis;if(!A)return;$('#bankTbody').innerHTML=A.banks.length?A.banks.map(b=>`<tr><td><b>${esc(b.bank)}</b></td><td class="money">${fmtInt(b.inCount)}</td><td class="money green">${fmtMoney(b.inAmount)}</td><td class="money">${fmtInt(b.outCount)}</td><td class="money red">${fmtMoney(b.outAmount)}</td><td class="money">${fmtMoney(b.total)}</td></tr>`).join(''):'<tr><td colspan="6" class="empty">ไม่มีข้อมูลธนาคาร</td></tr>'}
+
+// ---------- SVG Network ----------
+function makeLayoutKey(main){const f=state.file;return 'MoneyFlowOffline:v2:'+[f?.name||'data',f?.size||0,normalizeAcct(main)].join('|')}
+function safeLocalGet(k){try{return localStorage.getItem(k)}catch(_){return null}}
+function safeLocalSet(k,v){try{localStorage.setItem(k,v);return true}catch(_){return false}}
+function loadNetworkPersistence(){
+  state.networkLayout={nodes:{},bends:{},pinned:{}};state.networkMeta={};state.networkUI=freshNetworkUI();
+  if(!state.layoutKey)return;const raw=safeLocalGet(state.layoutKey);if(!raw)return;
+  try{const d=JSON.parse(raw);state.networkLayout={nodes:d.nodes||{},bends:d.bends||{},pinned:d.pinned||{}};state.networkMeta=d.meta||{}}catch(_){ }
+}
+function saveNetworkPersistence(showMsg=false){
+  if(!state.layoutKey)return false;const ok=safeLocalSet(state.layoutKey,JSON.stringify({...state.networkLayout,meta:state.networkMeta||{}}));if(showMsg)status(ok?'บันทึก Layout / Tag / Note ไว้ใน Browser แล้ว':'Browser ไม่อนุญาตให้บันทึก Local Storage',ok?'ok':'err');return ok
+}
+const saveNetworkPersistenceSoon=debounce(()=>saveNetworkPersistence(false),300);
+function isoDateUTC(ms){if(!Number.isFinite(ms))return'';return new Date(ms).toISOString().slice(0,10)}
+function isoDateTimeUTC(ms){if(!Number.isFinite(ms))return'';return new Date(ms).toISOString().slice(0,16)}
+function startOfDateUTC(s){if(!s)return NaN;const v=s.includes('T')?s+(/:\d{2}$/.test(s)?':00':'')+'Z':s+'T00:00:00Z';return Date.parse(v)}
+function endOfDateUTC(s){if(!s)return NaN;if(s.includes('T')){const t=startOfDateUTC(s);return Number.isFinite(t)?t+59999:NaN}const t=Date.parse(s+'T00:00:00Z');return Number.isFinite(t)?t+86399999:NaN}
+function initNetworkPeriod(A){
+  const times=A.tx.map(t=>t.timestamp).filter(Number.isFinite);state.networkUI.timeMin=times.length?Math.min(...times):NaN;state.networkUI.timeMax=times.length?Math.max(...times):NaN;
+  if(Number.isFinite(state.networkUI.timeMin)){const s=isoDateTimeUTC(state.networkUI.timeMin),e=isoDateTimeUTC(state.networkUI.timeMax);$('#networkDateStart').value=s;$('#networkDateEnd').value=e;$('#timelineStart').value=0;$('#timelineEnd').value=1000;$('#timelineStartLabel').textContent=s.replace('T',' ');$('#timelineEndLabel').textContent=e.replace('T',' ')}
+}
+function networkFilters(){return {dir:$('#networkDirection')?.value||'',relation:$('#networkRelation')?.value||'',min:Math.max(0,+($('#networkMinAmount')?.value||0)),max:+($('#networkMaxAmount')?.value||0),start:startOfDateUTC($('#networkDateStart')?.value),end:endOfDateUTC($('#networkDateEnd')?.value)}}
+function accountRelation(key,A){if(key===normalizeAcct(A.main))return'MAIN';const a=A.accounts.find(x=>normalizeAcct(x.account)===key);return a?(a.inCount&&a.outCount?'BI':a.inCount?'IN':'OUT'):''}
+function getFilteredNetworkLinks(A){
+  const f=networkFilters(),out=[];
+  for(const base of A.links){
+    if(f.dir&&base.direction!==f.dir)continue;
+    const other=normalizeAcct(base.source)===normalizeAcct(A.main)?normalizeAcct(base.target):normalizeAcct(base.source),rel=accountRelation(other,A);if(f.relation&&rel!==f.relation)continue;
+    const txs=(base.transactions||[]).filter(t=>t.amount>=f.min&&(!f.max||t.amount<=f.max)&&(!Number.isFinite(f.start)||!Number.isFinite(t.timestamp)||t.timestamp>=f.start)&&(!Number.isFinite(f.end)||!Number.isFinite(t.timestamp)||t.timestamp<=f.end));if(!txs.length)continue;
+    const first=txs.slice().sort(compareTx)[0],last=txs.slice().sort(compareTx).at(-1);out.push({...base,transactions:txs,count:txs.length,amount:txs.reduce((s,t)=>s+t.amount,0),first,last});
+  }
+  return out.sort((a,b)=>b.amount-a.amount)
+}
+function routeInfo(links,root,depth){
+  root=normalizeAcct(root);if(!root)return {nodes:new Set(),edges:new Set()};const adj=new Map();
+  links.forEach((l,i)=>{const a=normalizeAcct(l.source),b=normalizeAcct(l.target);if(!adj.has(a))adj.set(a,[]);if(!adj.has(b))adj.set(b,[]);adj.get(a).push([b,i]);adj.get(b).push([a,i])});
+  const nodes=new Set([root]),edges=new Set(),q=[[root,0]];while(q.length){const [n,d]=q.shift();if(d>=depth)continue;for(const [m,i] of adj.get(n)||[]){edges.add(i);if(!nodes.has(m)){nodes.add(m);q.push([m,d+1])}}}return {nodes,edges}
+}
+function networkActivity(links,A){const m=new Map();for(const l of links){for(const k of [normalizeAcct(l.source),normalizeAcct(l.target)]){if(k===normalizeAcct(A.main))continue;const v=m.get(k)||{key:k,amount:0,count:0};v.amount+=l.amount;v.count+=l.count;m.set(k,v)}}return [...m.values()].sort((a,b)=>b.amount-a.amount)}
+function renderNetwork(limit=25){
+  const A=state.analysis;if(!A)return;const svg=$('#networkSvg');svg.innerHTML='';const W=1200,H=700,cx=W/2,cy=H/2;
+  state.networkLayout=state.networkLayout||{nodes:{},bends:{},pinned:{}};state.networkLayout.nodes||={};state.networkLayout.bends||={};state.networkLayout.pinned||={};state.networkMeta||={};state.networkUI||=freshNetworkUI();
+  let links=getFilteredNetworkLinks(A);const hidden=state.networkUI.hidden||new Set();links=links.filter(l=>!hidden.has(normalizeAcct(l.source))&&!hidden.has(normalizeAcct(l.target)));
+  const activity=networkActivity(links,A),selectedKeys=new Set(activity.slice(0,limit).map(x=>x.key));selectedKeys.add(normalizeAcct(A.main));
+  for(const k of state.networkUI.selected||[])selectedKeys.add(k);if(state.networkUI.focusRoot)selectedKeys.add(normalizeAcct(state.networkUI.focusRoot));
+  let route={nodes:new Set(),edges:new Set()};if(state.networkUI.focusRoot)route=routeInfo(links,state.networkUI.focusRoot,+($('#networkDepth')?.value||2));
+  if(state.networkUI.focusOnly&&route.nodes.size)for(const k of [...selectedKeys])if(!route.nodes.has(k))selectedKeys.delete(k);
+  if(state.networkUI.selectedOnly&&state.networkUI.selected.size){const keep=new Set(state.networkUI.selected);keep.add(normalizeAcct(A.main));for(const k of [...selectedKeys])if(!keep.has(k))selectedKeys.delete(k)}
+  links=links.filter(l=>selectedKeys.has(normalizeAcct(l.source))&&selectedKeys.has(normalizeAcct(l.target)));
+  // route is recomputed after limit filtering for edge dimming
+  if(state.networkUI.focusRoot)route=routeInfo(links,state.networkUI.focusRoot,+($('#networkDepth')?.value||2));
+  const nodeKeys=new Set([normalizeAcct(A.main)]);links.forEach(l=>{nodeKeys.add(normalizeAcct(l.source));nodeKeys.add(normalizeAcct(l.target))});
+  const accounts=[...nodeKeys].filter(k=>k!==normalizeAcct(A.main)).map(k=>A.accounts.find(a=>normalizeAcct(a.account)===k)||{account:k,bank:'',inCount:0,outCount:0,total:0});
+  const inNodes=accounts.filter(a=>a.inCount>0&&a.outCount===0),outNodes=accounts.filter(a=>a.outCount>0&&a.inCount===0),biNodes=accounts.filter(a=>a.inCount>0&&a.outCount>0),pos=new Map([[normalizeAcct(A.main),{x:cx,y:cy,main:true,account:A.main}]]);
+  placeSide(inNodes,205,cy,500,'left');placeSide(outNodes,W-205,cy,500,'right');biNodes.forEach((a,i)=>{const ang=-Math.PI/2+(i+1)*Math.PI/(biNodes.length+1);pos.set(normalizeAcct(a.account),{x:cx+Math.cos(ang)*360,y:cy+Math.sin(ang)*275,account:a.account,bi:true})});
+  function placeSide(arr,x,y,spread,side){arr.forEach((a,i)=>{const yy=arr.length===1?y:y-spread/2+i*(spread/(Math.max(1,arr.length-1)));pos.set(normalizeAcct(a.account),{x,y:yy,account:a.account,side})})}
+  for(const [key,p] of pos){const saved=state.networkLayout.nodes[key];if(saved){p.x=saved.x;p.y=saved.y}}
+  const defs=document.createElementNS('http://www.w3.org/2000/svg','defs');defs.innerHTML=`<marker id="arrIn" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L8,3 z" fill="#35d07f"/></marker><marker id="arrOut" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L0,6 L8,3 z" fill="#ff6577"/></marker>`;svg.appendChild(defs);
+  if(!links.length){const t=document.createElementNS('http://www.w3.org/2000/svg','text');t.setAttribute('x',W/2);t.setAttribute('y',H/2);t.setAttribute('class','network-empty');t.textContent='ไม่พบเส้นเชื่อมตามตัวกรองปัจจุบัน';svg.appendChild(t);updateNetworkStats([],A,activity);return}
+  const pairGroups=new Map();for(const l of links){const a=normalizeAcct(l.source),b=normalizeAcct(l.target),pair=[a,b].sort().join('↔');if(!pairGroups.has(pair))pairGroups.set(pair,[]);pairGroups.get(pair).push(l)}
+  const defaultBends=new Map();function edgeKey(l){return `${normalizeAcct(l.source)}>${normalizeAcct(l.target)}|${norm(l.bank||'')}|${l.direction||''}`}
+  for(const [pair,group] of pairGroups){const canonical=pair.split('↔');group.forEach((l,i)=>{if(group.length===1){defaultBends.set(edgeKey(l),0);return}const physical=(i-(group.length-1)/2)*50,same=normalizeAcct(l.source)===canonical[0];defaultBends.set(edgeKey(l),same?physical:-physical)})}
+  const maxAmt=Math.max(...links.map(l=>l.amount),1),edgeItems=[],nodeItems=new Map();
+  function control(item){const p1=pos.get(item.sKey),p2=pos.get(item.tKey);if(!p1||!p2)return null;const dx=p2.x-p1.x,dy=p2.y-p1.y,len=Math.hypot(dx,dy)||1,mx=(p1.x+p2.x)/2,my=(p1.y+p2.y)/2,nx=-dy/len,ny=dx/len;return {p1,p2,qx:mx+nx*item.bend,qy:my+ny*item.bend,mx,my,nx,ny}}
+  function pathFor(item){const c=control(item);return c?`M ${c.p1.x.toFixed(2)} ${c.p1.y.toFixed(2)} Q ${c.qx.toFixed(2)} ${c.qy.toFixed(2)} ${c.p2.x.toFixed(2)} ${c.p2.y.toFixed(2)}`:''}
+  function updateEdge(item){const d=pathFor(item);item.path.setAttribute('d',d);item.hit.setAttribute('d',d);const c=control(item);if(c&&item.label){item.label.setAttribute('x',(.25*c.p1.x+.5*c.qx+.25*c.p2.x).toFixed(2));item.label.setAttribute('y',(.25*c.p1.y+.5*c.qy+.25*c.p2.y-5).toFixed(2))}}
+  function updateConnected(key){for(const item of edgeItems)if(item.sKey===key||item.tKey===key)updateEdge(item)}
+  links.forEach((l,idx)=>{
+    const sKey=normalizeAcct(l.source),tKey=normalizeAcct(l.target);if(!pos.get(sKey)||!pos.get(tKey))return;const key=edgeKey(l),saved=state.networkLayout.bends[key],item={l,key,sKey,tKey,bend:Number.isFinite(saved)?saved:(defaultBends.get(key)||0),index:idx};
+    const g=document.createElementNS('http://www.w3.org/2000/svg','g'),path=document.createElementNS('http://www.w3.org/2000/svg','path'),isRoute=!state.networkUI.focusRoot||route.edges.has(idx),opacity=isRoute?'.78':'.13';path.setAttribute('fill','none');path.setAttribute('stroke',l.direction==='IN'?'#35d07f':'#ff6577');path.setAttribute('stroke-opacity',opacity);path.setAttribute('stroke-width',String(1.8+Math.sqrt(l.amount/maxAmt)*8));path.setAttribute('marker-end',l.direction==='IN'?'url(#arrIn)':'url(#arrOut)');path.setAttribute('stroke-linecap','round');
+    const hit=document.createElementNS('http://www.w3.org/2000/svg','path');hit.setAttribute('fill','none');hit.setAttribute('stroke','transparent');hit.setAttribute('stroke-width','22');hit.setAttribute('pointer-events','stroke');hit.setAttribute('class','edge-hit');
+    const label=document.createElementNS('http://www.w3.org/2000/svg','text');label.setAttribute('class','edge-label');label.textContent=`${fmtInt(l.count)}× • ฿${fmtMoney(l.amount)}`;label.style.display=$('#showEdgeLabels')?.checked?'':'none';
+    const title=document.createElementNS('http://www.w3.org/2000/svg','title');title.textContent=`${l.source} → ${l.target}\n${l.count} ครั้ง • ฿${fmtMoney(l.amount)}\nคลิก = ดูรายการ • ลาก = ดัดเส้น`;path.appendChild(title);g.append(path,hit,label);svg.appendChild(g);Object.assign(item,{path,hit,label,baseOpacity:opacity});edgeItems.push(item);updateEdge(item);
+    hit.addEventListener('pointerdown',e=>beginEdgeDrag(e,item));hit.addEventListener('pointerenter',()=>path.setAttribute('stroke-opacity','1'));hit.addEventListener('pointerleave',()=>{if(!active||active.item!==item)path.setAttribute('stroke-opacity',item.baseOpacity)});
+  });
+  const maxNode=Math.max(...accounts.map(a=>a.total||0),1);
+  for(const [key,p0] of pos){const account=p0.account||key,a=p0.main?null:A.accounts.find(x=>normalizeAcct(x.account)===key),p=p0,g=document.createElementNS('http://www.w3.org/2000/svg','g');g.style.cursor=state.networkLayout.pinned[key]?'not-allowed':'grab';g.setAttribute('data-node',key);
+    const r=p.main?40:Math.min(31,17+Math.sqrt((a?.total||0)/maxNode)*13),c=document.createElementNS('http://www.w3.org/2000/svg','circle'),selected=state.networkUI.selected.has(key),isFocus=normalizeAcct(state.networkUI.focusRoot)===key,inRoute=!state.networkUI.focusRoot||route.nodes.has(key);c.setAttribute('cx',p.x);c.setAttribute('cy',p.y);c.setAttribute('r',r);c.setAttribute('fill',p.main?'#113e55':a?.inCount&&a?.outCount?'#392f58':a?.inCount?'#123a2a':'#451c25');c.setAttribute('stroke',selected||isFocus?'#27d4ff':p.main?'#27d4ff':a?.inCount&&a?.outCount?'#aa8cff':a?.inCount?'#35d07f':'#ff6577');c.setAttribute('stroke-width',selected||isFocus?'4':p.main?'3':'2');c.setAttribute('opacity',inRoute?'1':'.25');if(selected)c.setAttribute('class','selected-ring');
+    const t=document.createElementNS('http://www.w3.org/2000/svg','text');t.setAttribute('x',p.x);t.setAttribute('y',p.y+4);t.setAttribute('text-anchor','middle');t.setAttribute('fill','#eaf5fb');t.setAttribute('font-size',p.main?'13':'10');t.setAttribute('font-weight','800');t.setAttribute('pointer-events','none');t.setAttribute('opacity',inRoute?'1':'.28');t.textContent=shortAccount(account);
+    const tt=document.createElementNS('http://www.w3.org/2000/svg','text');tt.setAttribute('x',p.x);tt.setAttribute('y',p.y+r+16);tt.setAttribute('text-anchor','middle');tt.setAttribute('fill','#8fa4b8');tt.setAttribute('font-size','9');tt.setAttribute('pointer-events','none');tt.setAttribute('opacity',inRoute?'1':'.28');tt.textContent=p.main?'บัญชีหลัก':(a?.bank||'');
+    const meta=state.networkMeta[key]||{},badge=document.createElementNS('http://www.w3.org/2000/svg','text');badge.setAttribute('class','node-badge');badge.setAttribute('x',p.x);badge.setAttribute('y',p.y-r-8);badge.setAttribute('text-anchor','middle');badge.textContent=(state.networkLayout.pinned[key]?'📌 ':'')+(meta.tag||'');
+    g.append(c,t,tt,badge);svg.appendChild(g);nodeItems.set(key,{g,c,t,tt,badge,r,p,account,isMain:!!p.main,key});g.addEventListener('pointerdown',e=>beginNodeDrag(e,key));g.addEventListener('contextmenu',e=>{e.preventDefault();e.stopPropagation();showNetworkContext(e,key,account,!!p.main)});
+  }
+  let active=null;
+  function svgPoint(e){const pt=svg.createSVGPoint();pt.x=e.clientX;pt.y=e.clientY;const m=svg.getScreenCTM();return m?pt.matrixTransform(m.inverse()):{x:e.offsetX,y:e.offsetY}}
+  function beginNodeDrag(e,key){if(e.button!==undefined&&e.button!==0)return;e.preventDefault();e.stopPropagation();const n=nodeItems.get(key);if(!n)return;if(state.networkLayout.pinned[key]){showNode(n.account,n.isMain);return}const pt=svgPoint(e);n.g.style.cursor='grabbing';n.g.parentNode.appendChild(n.g);active={type:'node',key,item:n,startX:pt.x,startY:pt.y,originX:n.p.x,originY:n.p.y,moved:false,pointerId:e.pointerId,multi:e.ctrlKey||e.metaKey};try{svg.setPointerCapture(e.pointerId)}catch(_){}}
+  function beginEdgeDrag(e,item){if(e.button!==undefined&&e.button!==0)return;e.preventDefault();e.stopPropagation();const pt=svgPoint(e);item.path.setAttribute('stroke-opacity','1');active={type:'edge',item,startX:pt.x,startY:pt.y,moved:false,pointerId:e.pointerId};try{svg.setPointerCapture(e.pointerId)}catch(_){}}
+  function moveActive(e){if(!active)return;e.preventDefault();const pt=svgPoint(e);if(active.type==='node'){const n=active.item,dx=pt.x-active.startX,dy=pt.y-active.startY;if(Math.hypot(dx,dy)>3)active.moved=true;n.p.x=Math.max(n.r+8,Math.min(W-n.r-8,active.originX+dx));n.p.y=Math.max(n.r+8,Math.min(H-n.r-24,active.originY+dy));n.c.setAttribute('cx',n.p.x);n.c.setAttribute('cy',n.p.y);n.t.setAttribute('x',n.p.x);n.t.setAttribute('y',n.p.y+4);n.tt.setAttribute('x',n.p.x);n.tt.setAttribute('y',n.p.y+n.r+16);n.badge.setAttribute('x',n.p.x);n.badge.setAttribute('y',n.p.y-n.r-8);state.networkLayout.nodes[active.key]={x:n.p.x,y:n.p.y};updateConnected(active.key);saveNetworkPersistenceSoon()}else{const dist=Math.hypot(pt.x-active.startX,pt.y-active.startY);if(dist<4&&!active.moved)return;active.moved=true;const item=active.item,c=control(item);if(!c)return;item.bend=(pt.x-c.mx)*c.nx+(pt.y-c.my)*c.ny;item.bend=Math.max(-320,Math.min(320,item.bend));state.networkLayout.bends[item.key]=item.bend;updateEdge(item);saveNetworkPersistenceSoon()}}
+  function endActive(e){if(!active)return;const a=active;active=null;try{svg.releasePointerCapture(a.pointerId)}catch(_){}if(a.type==='node'){a.item.g.style.cursor='grab';if(!a.moved){if(a.multi){toggleNodeSelection(a.key);renderNetwork(+$('#networkLimit').value||25)}else showNode(a.item.account,a.item.isMain)}}else{a.item.path.setAttribute('stroke-opacity',a.item.baseOpacity);if(!a.moved)showEdge(a.item.l)}}
+  svg.onpointermove=moveActive;svg.onpointerup=endActive;svg.onpointercancel=endActive;svg.oncontextmenu=e=>e.preventDefault();updateNetworkStats(links,A,activity);
+}
+function toggleNodeSelection(key){key=normalizeAcct(key);if(state.networkUI.selected.has(key))state.networkUI.selected.delete(key);else state.networkUI.selected.add(key)}
+function updateNetworkStats(links,A,activity){
+  const nodes=new Set([normalizeAcct(A.main)]);links.forEach(l=>{nodes.add(normalizeAcct(l.source));nodes.add(normalizeAcct(l.target))});const total=links.reduce((s,l)=>s+l.amount,0),txc=links.reduce((s,l)=>s+l.count,0);$('#networkStats').innerHTML=`<span class="network-chip"><b>${fmtInt(nodes.size)}</b> Node</span><span class="network-chip"><b>${fmtInt(links.length)}</b> เส้น</span><span class="network-chip"><b>${fmtInt(txc)}</b> รายการ</span><span class="network-chip"><b>฿${fmtMoney(total)}</b> ยอดที่แสดง</span><span class="network-chip ${state.networkUI.selected.size?'active':''}"><b>${fmtInt(state.networkUI.selected.size)}</b> เลือกไว้</span><span class="network-chip"><b>${fmtInt(state.networkUI.hidden.size)}</b> ซ่อน</span>`;
+  const top=activity.slice(0,5);$('#networkRanking').innerHTML=top.length?'<span class="network-chip">ศูนย์กลาง/กิจกรรมสูง:</span>'+top.map((x,i)=>{const a=A.accounts.find(v=>normalizeAcct(v.account)===x.key);return `<span class="network-chip">${i+1}. <b>${esc(shortAccount(a?.account||x.key))}</b> • ${fmtInt(x.count)} ครั้ง • ฿${fmtMoney(x.amount)}</span>`}).join(''):'';
+}
+function showNetworkContext(e,key,account,isMain){const m=$('#networkContext'),pinned=!!state.networkLayout.pinned[key];m.innerHTML=`<button data-act="detail">🔎 ดูรายละเอียด</button><button data-act="pin">${pinned?'📍 ปลดล็อกตำแหน่ง':'📌 ล็อกตำแหน่ง'}</button>${isMain?'':'<button data-act="select">☑ เลือก/ยกเลิกเลือก</button><button data-act="focus">✨ ติดตามเส้นทางเงิน</button><button data-act="only">◎ แสดงเฉพาะเครือข่ายนี้</button><hr><button data-act="hide">🙈 ซ่อนบัญชีนี้</button>'}`;m.style.left=Math.min(e.clientX,window.innerWidth-210)+'px';m.style.top=Math.min(e.clientY,window.innerHeight-250)+'px';m.classList.add('show');m.onclick=ev=>{const act=ev.target.closest('button')?.dataset.act;if(!act)return;m.classList.remove('show');if(act==='detail')showNode(account,isMain);if(act==='pin'){state.networkLayout.pinned[key]=!pinned;saveNetworkPersistence(true);renderNetwork(+$('#networkLimit').value||25)}if(act==='select'){toggleNodeSelection(key);renderNetwork(+$('#networkLimit').value||25)}if(act==='focus'){state.networkUI.focusRoot=key;state.networkUI.focusOnly=false;renderNetwork(+$('#networkLimit').value||25);showNode(account,isMain)}if(act==='only'){state.networkUI.focusRoot=key;state.networkUI.focusOnly=true;renderNetwork(+$('#networkLimit').value||25)}if(act==='hide'&&!isMain){state.networkUI.hidden.add(key);renderNetwork(+$('#networkLimit').value||25)}}}
+function hideNetworkContext(){const m=$('#networkContext');if(m)m.classList.remove('show')}
+function nodeMeta(key){return state.networkMeta[normalizeAcct(key)]||{tag:'',note:''}}
+function showNode(account,isMain){
+  const A=state.analysis,d=$('#nodeDetail'),key=normalizeAcct(account),meta=nodeMeta(key);let html='<button class="close-x" id="detailCloseBtn">×</button>';
+  if(isMain){html+=`<h4>${esc(account)}</h4><div class="muted">บัญชีหลัก</div><div class="mini">เงินเข้า: <b class="green">฿${fmtMoney(A.inAmt)}</b> (${fmtInt(A.inCount)} ครั้ง)<br>เงินออก: <b class="red">฿${fmtMoney(A.outAmt)}</b> (${fmtInt(A.outCount)} ครั้ง)<br>คู่บัญชี: <b>${fmtInt(A.accounts.length)}</b></div>`}else{const a=A.accounts.find(x=>normalizeAcct(x.account)===key);if(!a)return;html+=`<h4>${esc(a.account)}</h4><div class="muted">${esc(a.bank||'ไม่ระบุธนาคาร')} • ${esc(a.relation)}</div><div class="mini">เงินเข้า: <b class="green">฿${fmtMoney(a.inAmount)}</b> (${fmtInt(a.inCount)} ครั้ง)<br>เงินออก: <b class="red">฿${fmtMoney(a.outAmount)}</b> (${fmtInt(a.outCount)} ครั้ง)<br>ยอดรวม: <b>฿${fmtMoney(a.total)}</b><br>สุทธิ: <b class="${a.net>=0?'green':'red'}">${a.net<0?'-':''}฿${fmtMoney(Math.abs(a.net))}</b></div>`}
+  html+=`<div class="detail-actions"><button class="btn btn-ghost" id="detailSelectBtn">☑ ${state.networkUI.selected.has(key)?'ยกเลิกเลือก':'เลือกบัญชี'}</button><button class="btn btn-ghost" id="detailFocusBtn">✨ ติดตามเส้นทาง</button><button class="btn btn-ghost" id="detailOnlyBtn">◎ เฉพาะเครือข่าย</button><button class="btn btn-ghost" id="detailPinBtn">${state.networkLayout.pinned[key]?'📍 ปลดล็อก':'📌 ล็อกตำแหน่ง'}</button></div><div class="note-box"><b>🏷 Tag / Note</b><input id="nodeTagInput" maxlength="40" placeholder="เช่น ผู้รับหลัก / ร้านค้า / รอตรวจสอบ" value="${esc(meta.tag||'')}"/><textarea id="nodeNoteInput" placeholder="บันทึกข้อสังเกต...">${esc(meta.note||'')}</textarea><button class="btn btn-ghost" id="saveNodeMetaBtn" style="margin-top:7px">💾 บันทึก Note</button></div>`;
+  if(!isMain){const a=A.accounts.find(x=>normalizeAcct(x.account)===key),rows=a?.transactions.slice().sort((x,y)=>compareTx(y,x)).slice(0,12)||[];html+=`<div class="mini"><b>รายการล่าสุด</b><table class="detail-table"><thead><tr><th>เวลา</th><th>ทิศทาง</th><th class="money">ยอด</th></tr></thead><tbody>${rows.map(t=>`<tr><td>${esc(dtLabel(t))}</td><td>${t.direction==='IN'?'<span class="green">เข้า</span>':'<span class="red">ออก</span>'}</td><td class="money">${fmtMoney(t.amount)}</td></tr>`).join('')}</tbody></table></div>`}
+  d.innerHTML=html;d.classList.add('show');$('#detailCloseBtn').onclick=()=>d.classList.remove('show');$('#detailSelectBtn').onclick=()=>{toggleNodeSelection(key);renderNetwork(+$('#networkLimit').value||25);showNode(account,isMain)};$('#detailFocusBtn').onclick=()=>{state.networkUI.focusRoot=key;state.networkUI.focusOnly=false;renderNetwork(+$('#networkLimit').value||25)};$('#detailOnlyBtn').onclick=()=>{state.networkUI.focusRoot=key;state.networkUI.focusOnly=true;renderNetwork(+$('#networkLimit').value||25)};$('#detailPinBtn').onclick=()=>{state.networkLayout.pinned[key]=!state.networkLayout.pinned[key];saveNetworkPersistence(true);renderNetwork(+$('#networkLimit').value||25);showNode(account,isMain)};$('#saveNodeMetaBtn').onclick=()=>{state.networkMeta[key]={tag:$('#nodeTagInput').value.trim(),note:$('#nodeNoteInput').value.trim()};saveNetworkPersistence(true);renderNetwork(+$('#networkLimit').value||25);showNode(account,isMain)}
+}
+function showEdge(l){
+  const d=$('#nodeDetail'),txs=(l.transactions||[]).slice().sort((a,b)=>compareTx(b,a));d.innerHTML=`<button class="close-x" id="detailCloseBtn">×</button><h4>${esc(shortAccount(l.source))} → ${esc(shortAccount(l.target))}</h4><div class="muted">${esc(l.bank||'ไม่ระบุธนาคาร')} • ${l.direction==='IN'?'เงินเข้า':'เงินออก'}</div><div class="mini">จำนวน: <b>${fmtInt(l.count)} ครั้ง</b><br>ยอดรวม: <b>฿${fmtMoney(l.amount)}</b><br>ครั้งแรก: ${esc(dtLabel(l.first))}<br>ครั้งล่าสุด: ${esc(dtLabel(l.last))}</div><div class="mini"><b>ธุรกรรมบนเส้นนี้</b><table class="detail-table"><thead><tr><th>วัน/เวลา</th><th class="money">ยอด</th><th>ประเภท / หมายเหตุ</th></tr></thead><tbody>${txs.slice(0,100).map(t=>`<tr><td>${esc(dtLabel(t))}</td><td class="money">${fmtMoney(t.amount)}</td><td>${esc(t.type||t.remarks||'-')}</td></tr>`).join('')}</tbody></table>${txs.length>100?`<div class="muted">แสดง 100 จาก ${fmtInt(txs.length)} รายการ</div>`:''}</div>`;d.classList.add('show');$('#detailCloseBtn').onclick=()=>d.classList.remove('show')
+}
+function focusNetworkSearch(){const q=norm($('#networkSearch').value);if(!q||!state.analysis)return;const A=state.analysis,all=[{account:A.main,bank:'บัญชีหลัก'},...A.accounts],meta=state.networkMeta||{};const a=all.find(x=>norm(`${x.account} ${x.bank||''} ${meta[normalizeAcct(x.account)]?.tag||''}`).includes(q));if(!a){status('ไม่พบบัญชีที่ค้นหาใน Statement นี้','err');return}const key=normalizeAcct(a.account);state.networkUI.focusRoot=key;state.networkUI.focusOnly=false;state.networkUI.hidden.delete(key);renderNetwork(+$('#networkLimit').value||25);showNode(a.account,key===normalizeAcct(A.main));status(`Focus: ${a.account}`,'ok')}
+function clearNetworkFilters(){
+  $('#networkDirection').value='';$('#networkRelation').value='';$('#networkMinAmount').value='';$('#networkMaxAmount').value='';state.networkUI.focusRoot='';state.networkUI.focusOnly=false;state.networkUI.selectedOnly=false;$('#selectedOnlyBtn').classList.remove('btn-primary');if(state.analysis)initNetworkPeriod(state.analysis);renderNetwork(+$('#networkLimit').value||25)
+}
+function syncTimelineFromSliders(){const min=state.networkUI.timeMin,max=state.networkUI.timeMax;if(!Number.isFinite(min)||!Number.isFinite(max)||max<=min)return;let a=+$('#timelineStart').value,b=+$('#timelineEnd').value;if(a>b){if(document.activeElement===$('#timelineStart'))a=b;else b=a;$('#timelineStart').value=a;$('#timelineEnd').value=b}const t1=min+(max-min)*a/1000,t2=min+(max-min)*b/1000;$('#networkDateStart').value=isoDateTimeUTC(t1);$('#networkDateEnd').value=isoDateTimeUTC(t2);$('#timelineStartLabel').textContent=isoDateTimeUTC(t1).replace('T',' ');$('#timelineEndLabel').textContent=isoDateTimeUTC(t2).replace('T',' ');renderNetwork(+$('#networkLimit').value||25)}
+function syncSlidersFromDates(){const min=state.networkUI.timeMin,max=state.networkUI.timeMax;if(!Number.isFinite(min)||!Number.isFinite(max)||max<=min)return;const s=startOfDateUTC($('#networkDateStart').value),e=endOfDateUTC($('#networkDateEnd').value);if(Number.isFinite(s))$('#timelineStart').value=Math.max(0,Math.min(1000,(s-min)/(max-min)*1000));if(Number.isFinite(e))$('#timelineEnd').value=Math.max(0,Math.min(1000,(e-min)/(max-min)*1000));$('#timelineStartLabel').textContent=($('#networkDateStart').value||'-').replace('T',' ');$('#timelineEndLabel').textContent=($('#networkDateEnd').value||'-').replace('T',' ');renderNetwork(+$('#networkLimit').value||25)}
+function exportNetworkSvg(){const svg=$('#networkSvg').cloneNode(true);svg.setAttribute('xmlns','http://www.w3.org/2000/svg');svg.querySelectorAll('.edge-hit').forEach(x=>x.remove());return new XMLSerializer().serializeToString(svg)}
+function saveNetworkPng(){const xml=exportNetworkSvg(),blob=new Blob([xml],{type:'image/svg+xml;charset=utf-8'}),url=URL.createObjectURL(blob),img=new Image();img.onload=()=>{const canvas=document.createElement('canvas');canvas.width=1800;canvas.height=1050;const ctx=canvas.getContext('2d');ctx.fillStyle='#07121b';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.drawImage(img,0,0,canvas.width,canvas.height);URL.revokeObjectURL(url);canvas.toBlob(b=>downloadBlob(b,'money_flow_network.png'),'image/png')};img.onerror=()=>{URL.revokeObjectURL(url);status('สร้าง PNG ไม่สำเร็จ','err')};img.src=url}
+function printNetworkReport(){const A=state.analysis;if(!A)return;const w=window.open('','_blank');if(!w){status('Browser บล็อกหน้าต่างพิมพ์ กรุณาอนุญาต Pop-up','err');return}const net=A.inAmt-A.outAmt,svg=exportNetworkSvg();w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>Money Flow Network Report</title><style>@page{size:A4 landscape;margin:10mm}body{font-family:"Segoe UI",Tahoma,sans-serif;color:#16222c;margin:0}h1{font-size:18px;margin:0 0 4px}.muted{color:#607382;font-size:10px}.k{display:flex;gap:8px;margin:10px 0}.k div{border:1px solid #ccd6dd;border-radius:8px;padding:7px 10px;font-size:10px}.net{border:1px solid #ccd6dd;border-radius:10px;overflow:hidden;background:#07121b;height:150mm}.net svg{width:100%;height:100%}.foot{font-size:9px;color:#687b88;margin-top:6px}</style></head><body><h1>Money Flow Link Analysis</h1><div class="muted">บัญชีหลัก: ${esc(A.main)} • สร้างรายงานจากระบบ Offline</div><div class="k"><div>เงินเข้า <b>฿${fmtMoney(A.inAmt)}</b> (${fmtInt(A.inCount)} ครั้ง)</div><div>เงินออก <b>฿${fmtMoney(A.outAmt)}</b> (${fmtInt(A.outCount)} ครั้ง)</div><div>สุทธิ <b>${net<0?'-':''}฿${fmtMoney(Math.abs(net))}</b></div><div>คู่บัญชี <b>${fmtInt(A.accounts.length)}</b></div></div><div class="net">${svg}</div><div class="foot">หมายเหตุ: แผนภาพเป็นการวิเคราะห์ความสัมพันธ์จาก Statement ที่นำเข้า ควรตรวจสอบกับเอกสารต้นทางก่อนนำไปใช้ประกอบข้อสรุป</div><script>window.onload=()=>window.print()<\/script></body></html>`);w.document.close()}
+
+// ---------- UI events ----------
+$('#tabs').addEventListener('click',e=>{const b=e.target.closest('.tab');if(!b)return;$$('.tab').forEach(x=>x.classList.toggle('active',x===b));$$('.tab-pane').forEach(p=>p.classList.remove('active'));$('#pane-'+b.dataset.tab).classList.add('active');if(b.dataset.tab==='network'&&state.analysis)renderNetwork(+$('#networkLimit').value||25)});
+$('#accountSearch').addEventListener('input',debounce(e=>renderAccounts(e.target.value)));$('#linkSearch').addEventListener('input',debounce(e=>renderLinks(e.target.value)));function txFilter(){renderTransactions($('#txSearch').value,$('#dirFilter').value)}$('#txSearch').addEventListener('input',debounce(txFilter));$('#dirFilter').addEventListener('change',txFilter);
+$('#networkLimit').addEventListener('change',e=>renderNetwork(+e.target.value));$('#nodeLimit').addEventListener('change',e=>{$('#networkLimit').value=e.target.value;if(state.analysis)renderNetwork(+e.target.value)});
+['networkDirection','networkRelation','networkDepth','showEdgeLabels'].forEach(id=>$('#'+id)?.addEventListener('change',()=>state.analysis&&renderNetwork(+$('#networkLimit').value||25)));
+['networkMinAmount','networkMaxAmount'].forEach(id=>$('#'+id)?.addEventListener('input',debounce(()=>state.analysis&&renderNetwork(+$('#networkLimit').value||25),220)));
+$('#networkDateStart').addEventListener('change',syncSlidersFromDates);$('#networkDateEnd').addEventListener('change',syncSlidersFromDates);$('#timelineStart').addEventListener('input',debounce(syncTimelineFromSliders,80));$('#timelineEnd').addEventListener('input',debounce(syncTimelineFromSliders,80));
+$('#networkFocusBtn').addEventListener('click',focusNetworkSearch);$('#networkSearch').addEventListener('keydown',e=>{if(e.key==='Enter')focusNetworkSearch()});$('#clearNetworkFilterBtn').addEventListener('click',clearNetworkFilters);
+$('#selectedOnlyBtn').addEventListener('click',()=>{state.networkUI.selectedOnly=!state.networkUI.selectedOnly;$('#selectedOnlyBtn').classList.toggle('btn-primary',state.networkUI.selectedOnly);renderNetwork(+$('#networkLimit').value||25)});
+$('#showHiddenBtn').addEventListener('click',()=>{state.networkUI.hidden.clear();renderNetwork(+$('#networkLimit').value||25)});
+$('#resetNetworkBtn').addEventListener('click',()=>{state.networkLayout.nodes={};state.networkLayout.bends={};saveNetworkPersistenceSoon();if(state.analysis)renderNetwork(+$('#networkLimit').value||25)});
+$('#saveLayoutBtn').addEventListener('click',()=>saveNetworkPersistence(true));$('#loadLayoutBtn').addEventListener('click',()=>{loadNetworkPersistence();if(state.analysis)initNetworkPeriod(state.analysis);renderNetwork(+$('#networkLimit').value||25);status('โหลด Layout / Tag / Note ที่บันทึกไว้แล้ว','ok')});
+$('#saveSvgBtn').addEventListener('click',()=>downloadBlob(new Blob([exportNetworkSvg()],{type:'image/svg+xml;charset=utf-8'}),'money_flow_network.svg'));$('#savePngBtn').addEventListener('click',saveNetworkPng);$('#printNetworkBtn').addEventListener('click',printNetworkReport);
+document.addEventListener('pointerdown',e=>{if(!e.target.closest('#networkContext'))hideNetworkContext()});window.addEventListener('blur',hideNetworkContext);
+$('#rapidTolerance').addEventListener('change',()=>{if(!state.analysis)return;state.analysis.rapid=findRapid(state.analysis.tx,+$('#rapidMinutes').value||60,+$('#rapidTolerance').value||0);renderRapid()});$('#rapidMinutes').addEventListener('change',()=>{if(!state.analysis)return;state.analysis.rapid=findRapid(state.analysis.tx,+$('#rapidMinutes').value||60,+$('#rapidTolerance').value||0);renderRapid()});
+$$('[data-export]').forEach(b=>b.addEventListener('click',()=>exportKind(b.dataset.export)));
+function exportKind(kind){const A=state.analysis;if(!A)return;let headers=[],rows=[];
+  if(kind==='accounts'){headers=['Account','Bank','In Count','In Amount','Out Count','Out Amount','Total','Net','Relation'];rows=A.accounts.map(a=>[a.account,a.bank,a.inCount,a.inAmount,a.outCount,a.outAmount,a.total,a.net,a.relation])}
+  if(kind==='links'){headers=['Source','Target','Bank','Direction','Count','Amount','First','Last'];rows=A.links.map(l=>[l.source,l.target,l.bank,l.direction,l.count,l.amount,dtLabel(l.first),dtLabel(l.last)])}
+  if(kind==='transactions'){headers=['No','Date','Time','Direction','Source Account','Beneficiary Account','Counterparty','Counterparty Bank','Amount','Type','Location','Remarks'];rows=A.tx.map(t=>[t.id,t.date,t.time,t.direction,t.origin,t.beneficiaryAccount,t.counterparty,t.counterpartyBank,t.amount,t.type,t.location,t.remarks])}
+  if(kind==='rapid'){headers=['Incoming Time','From Account','Incoming Amount','Outgoing Time','To Account','Outgoing Amount','Difference','Difference %','Minutes'];rows=A.rapid.map(x=>[dtLabel(x.inTx),x.inTx.counterparty,x.inAmount,dtLabel(x.outTx),x.outTx.counterparty,x.outAmount,x.difference,x.diffPct.toFixed(2),x.minutes.toFixed(1)])}
+  if(kind==='banks'){headers=['Bank','In Count','In Amount','Out Count','Out Amount','Total'];rows=A.banks.map(b=>[b.bank,b.inCount,b.inAmount,b.outCount,b.outAmount,b.total])}
+  const csv='\uFEFF'+[headers,...rows].map(r=>r.map(csvCell).join(',')).join('\r\n');downloadBlob(new Blob([csv],{type:'text/csv;charset=utf-8'}),`money_flow_${kind}.csv`)
+}
+function csvCell(v){let s=String(v??'');if(/[",\n\r]/.test(s))s='"'+s.replace(/"/g,'""')+'"';return s}function downloadBlob(blob,name){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},2000)}
+</script>
+</body>
+</html>
